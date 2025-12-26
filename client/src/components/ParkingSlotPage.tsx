@@ -141,7 +141,7 @@ const ParkingSlotPage: React.FC = () => {
   const handleBookNow = (slot: ParkingSlot) => {
     if (!token || !user) {
       alert("Please login to book a parking slot");
-      window.location.href = "/signup";
+      navigate("/login");
       return;
     }
 
