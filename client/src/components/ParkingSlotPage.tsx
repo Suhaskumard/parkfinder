@@ -55,12 +55,11 @@ const ParkingSlotPage: React.FC = () => {
   } | null>(null);
   const [duration, setDuration] = useState(1);
   const { token, user } = useAuth();
-  const API = import.meta.env.REACT_APP_API_URL;
 
   // Function to fetch parking slots
   const fetchParkingSlots = async () => {
     try {
-      const response = await fetch(`${API}/api/parking`);
+      const response = await fetch(`/api/parking`);
       const result: ApiResponse = await response.json();
       if (result.success) {
         // Add mock coordinates to slots
@@ -161,7 +160,7 @@ const ParkingSlotPage: React.FC = () => {
       // Calculate total price
       const totalPrice = selectedSlot.pricePerHour * duration;
 
-      const res = await fetch(`${API}/api/bookings/book`, {
+      const res = await fetch(`/api/bookings/book`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

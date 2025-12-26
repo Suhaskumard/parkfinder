@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
 import Parking from "./models/Parking.js";
+import dotenv from "dotenv";
+dotenv.config();
+
 
 const rawData = [
   {
