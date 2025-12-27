@@ -7,7 +7,7 @@ SmartPark is a full-stack MERN-based parking management system designed to solve
 
 ## ✨ Key Features
 
-- 🔴 Real-time parking slot availability
+- 🔴 Real-time parking slot availability based on location
 - 🗺️ Dual view interface (List View & Interactive Map View)
 - ⚡ One-click smart booking with instant confirmation
 - 🧑‍💼 Admin dashboard for complete system control
