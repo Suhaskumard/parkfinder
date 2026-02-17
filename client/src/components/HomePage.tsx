@@ -176,7 +176,7 @@ const HomePage: React.FC = () => {
 
       {/* Navigation Dots */}
       <div className="fixed right-6 top-1/2 transform -translate-y-1/2 z-40 hidden lg:flex flex-col gap-3">
-        {[0, 1, 2, 3].map((index) => (
+        {[0, 1, 2].map((index) => (
           <button
             key={index}
             onClick={() => scrollToSection(index)}
