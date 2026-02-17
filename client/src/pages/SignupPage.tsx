@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Eye,
@@ -11,6 +11,7 @@ import {
   AlertCircle,
   Key,
   Crown,
+  UserPlus,
 } from "lucide-react";
 
 export default function SignupPage() {
@@ -37,7 +38,117 @@ export default function SignupPage() {
   const [showAdminSecret, setShowAdminSecret] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
+
   const navigate = useNavigate();
+
+  // Detect system theme
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+    setTheme(mediaQuery.matches ? "light" : "dark");
+
+    const handler = (e: MediaQueryListEvent) => {
+      setTheme(e.matches ? "light" : "dark");
+    };
+
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
+  }, []);
+
+  // Theme-based classes
+  const getThemeClasses = () => {
+    return theme === "light"
+      ? {
+          bg: "bg-gray-50",
+          cardBg: "bg-white/90",
+          text: "text-gray-900",
+          textSecondary: "text-gray-600",
+          textMuted: "text-gray-500",
+          border: "border-gray-200",
+          borderAccent: "border-blue-600/30",
+          inputBg: "bg-white",
+          inputBorder: "border-gray-300",
+          placeholder: "placeholder-gray-400",
+          iconColor: "text-blue-600",
+          iconSecondary: "text-pink-600",
+          buttonGradient: {
+            primary: "from-blue-600 to-pink-600",
+            admin: "from-pink-600 to-red-600",
+          },
+          hoverBg: "hover:bg-blue-600/10",
+          shadow: "shadow-blue-600/10",
+          overlay: "bg-black/5",
+          errorBg: "bg-red-50",
+          errorBorder: "border-red-300",
+          errorText: "text-red-600",
+          successBg: "bg-green-50",
+          successBorder: "border-green-300",
+          successText: "text-green-600",
+          roleCard: {
+            user: {
+              active: "bg-blue-50 border-blue-500 text-blue-900",
+              inactive:
+                "bg-white border-gray-200 text-gray-600 hover:border-blue-400",
+            },
+            admin: {
+              active: "bg-pink-50 border-pink-500 text-pink-900",
+              inactive:
+                "bg-white border-gray-200 text-gray-600 hover:border-pink-400",
+            },
+          },
+          strength: {
+            weak: "text-red-600",
+            good: "text-yellow-600",
+            strong: "text-green-600",
+          },
+        }
+      : {
+          bg: "bg-[#191919]",
+          cardBg: "bg-[#191919]/70",
+          text: "text-[#EEECF6]",
+          textSecondary: "text-[#EEECF6]/70",
+          textMuted: "text-[#EEECF6]/40",
+          border: "border-[#1B42CB]/30",
+          borderAccent: "border-[#1B42CB]/30",
+          inputBg: "bg-[#191919]/50",
+          inputBorder: "border-[#1B42CB]/30",
+          placeholder: "placeholder-[#EEECF6]/40",
+          iconColor: "text-[#1B42CB]",
+          iconSecondary: "text-[#FF2F6C]",
+          buttonGradient: {
+            primary: "from-[#1B42CB] to-[#FF2F6C]",
+            admin: "from-[#FF2F6C] to-red-600",
+          },
+          hoverBg: "hover:bg-[#1B42CB]/10",
+          shadow: "shadow-[#1B42CB]/10",
+          overlay: "bg-black/40",
+          errorBg: "bg-red-500/10",
+          errorBorder: "border-red-500/30",
+          errorText: "text-red-400",
+          successBg: "bg-green-500/10",
+          successBorder: "border-green-500/30",
+          successText: "text-green-400",
+          roleCard: {
+            user: {
+              active: "bg-[#1B42CB]/20 border-[#1B42CB] text-[#EEECF6]",
+              inactive:
+                "bg-[#191919]/50 border-[#1B42CB]/30 text-[#EEECF6]/60 hover:border-[#1B42CB]",
+            },
+            admin: {
+              active: "bg-[#FF2F6C]/20 border-[#FF2F6C] text-[#EEECF6]",
+              inactive:
+                "bg-[#191919]/50 border-[#FF2F6C]/30 text-[#EEECF6]/60 hover:border-[#FF2F6C]",
+            },
+          },
+          strength: {
+            weak: "text-red-400",
+            good: "text-yellow-400",
+            strong: "text-green-400",
+          },
+        };
+  };
+
+  const themeClasses = getThemeClasses();
 
   const validateForm = () => {
     const newErrors = {
@@ -118,7 +229,6 @@ export default function SignupPage() {
 
   const handleInputChange = (field: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
     if (errors[field as keyof typeof errors]) {
       setErrors((prev) => ({ ...prev, [field]: "" }));
     }
@@ -157,25 +267,16 @@ export default function SignupPage() {
             role: form.role,
             adminSecret: form.role === "admin" ? form.adminSecret : undefined,
           }),
-        }
+        },
       );
 
       const data = await res.json();
 
       if (data.success) {
-        if (form.role === "admin") {
-          setMsg(
-            "Admin account created successfully! Redirecting to admin login..."
-          );
-          setTimeout(() => {
-            navigate("/");
-          }, 2000);
-        } else {
-          setMsg("Account created successfully! Redirecting to login...");
-          setTimeout(() => {
-            navigate("/");
-          }, 2000);
-        }
+        setMsg("Account created successfully! Redirecting to login...");
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
       } else {
         setMsg(data.message || "Signup failed. Please try again.");
       }
@@ -201,46 +302,54 @@ export default function SignupPage() {
     return "Very Weak";
   };
 
+  const getStrengthTextColor = () => {
+    if (passwordStrength <= 2) return themeClasses.strength.weak;
+    if (passwordStrength === 3) return themeClasses.strength.good;
+    if (passwordStrength >= 4) return themeClasses.strength.strong;
+    return themeClasses.textMuted;
+  };
+
   return (
-    <div className="min-h-screen bg-linear-to-br from-[#191919] via-[#0f0f0f] to-[#191919] flex items-center justify-center p-4">
+    <div
+      className={`min-h-screen ${themeClasses.bg} transition-colors duration-300 flex items-center justify-center p-4`}
+    >
       {/* Animated Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#1B42CB]/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-[#FF2F6C]/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-linear-to-r from-[#1B42CB]/5 to-[#FF2F6C]/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-gradient-to-r from-[#1B42CB]/5 to-[#FF2F6C]/5 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
       {/* Signup Card */}
       <div className="relative w-full max-w-md">
-        {/* Decorative Elements */}
-        <div className="absolute -top-6 -left-6 w-16 h-16 backdrop-blur-xl bg-[#1B42CB]/20 border border-[#1B42CB]/30 rounded-2xl flex items-center justify-center animate-float">
-          <User className="w-8 h-8 text-[#1B42CB]" />
-        </div>
-        <div className="absolute -bottom-6 -right-6 w-14 h-14 backdrop-blur-xl bg-[#FF2F6C]/20 border border-[#FF2F6C]/30 rounded-2xl flex items-center justify-center animate-float delay-500">
-          <Shield className="w-7 h-7 text-[#FF2F6C]" />
-        </div>
-
         {/* Main Card */}
-        <div className="backdrop-blur-xl bg-[#191919]/70 border border-[#1B42CB]/30 rounded-3xl p-8 shadow-2xl shadow-[#1B42CB]/10">
+        <div
+          className={`backdrop-blur-xl ${themeClasses.cardBg} border ${themeClasses.border} rounded-3xl p-8 shadow-2xl ${themeClasses.shadow}`}
+        >
           {/* Header */}
           <div className="text-center mb-8">
             <Link to="/" className="inline-block mb-6">
-              <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-[#1B42CB] to-[#FF2F6C] flex items-center justify-center mx-auto hover:scale-105 transition-transform duration-300">
+              <div
+                className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${themeClasses.buttonGradient.primary} flex items-center justify-center mx-auto hover:scale-105 transition-transform duration-300`}
+              >
                 <Shield className="w-8 h-8 text-white" />
               </div>
             </Link>
-            <h1 className="text-3xl font-bold bg-linear-to-r from-[#EEECF6] to-[#FF2F6C] bg-clip-text text-transparent mb-2">
+            <h1
+              className={`text-3xl font-bold bg-gradient-to-r ${themeClasses.buttonGradient.primary} bg-clip-text text-transparent mb-2`}
+            >
               Create Account
             </h1>
-            <p className="text-[#EEECF6]/60">
-              Join SmartPark as{" "}
-              {form.role === "admin" ? "Administrator" : "User"}
+            <p className={themeClasses.textSecondary}>
+              Join as {form.role === "admin" ? "Administrator" : "User"}
             </p>
           </div>
 
           {/* Role Selection */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-[#EEECF6] mb-3">
+            <label
+              className={`block text-sm font-medium ${themeClasses.text} mb-3`}
+            >
               Account Type
             </label>
             <div className="grid grid-cols-2 gap-3">
@@ -249,41 +358,53 @@ export default function SignupPage() {
                 onClick={() => handleRoleChange("user")}
                 className={`p-4 rounded-xl border transition-all duration-300 flex flex-col items-center justify-center gap-2 ${
                   form.role === "user"
-                    ? "bg-linear-to-br from-[#1B42CB]/20 to-[#1B42CB]/10 border-[#1B42CB] text-[#EEECF6]"
-                    : "bg-[#191919]/50 border-[#1B42CB]/30 text-[#EEECF6]/60 hover:border-[#1B42CB] hover:text-[#EEECF6]"
+                    ? themeClasses.roleCard.user.active
+                    : themeClasses.roleCard.user.inactive
                 }`}
               >
                 <User className="w-6 h-6" />
                 <span className="font-medium">User</span>
-                <span className="text-xs opacity-70">Regular Account</span>
+                <span className={`text-xs ${themeClasses.textMuted}`}>
+                  Regular Account
+                </span>
               </button>
               <button
                 type="button"
                 onClick={() => handleRoleChange("admin")}
                 className={`p-4 rounded-xl border transition-all duration-300 flex flex-col items-center justify-center gap-2 ${
                   form.role === "admin"
-                    ? "bg-linear-to-br from-[#FF2F6C]/20 to-[#FF2F6C]/10 border-[#FF2F6C] text-[#EEECF6]"
-                    : "bg-[#191919]/50 border-[#FF2F6C]/30 text-[#EEECF6]/60 hover:border-[#FF2F6C] hover:text-[#EEECF6]"
+                    ? themeClasses.roleCard.admin.active
+                    : themeClasses.roleCard.admin.inactive
                 }`}
               >
                 <Crown className="w-6 h-6" />
                 <span className="font-medium">Admin</span>
-                <span className="text-xs opacity-70">Administrator</span>
+                <span className={`text-xs ${themeClasses.textMuted}`}>
+                  Administrator
+                </span>
               </button>
             </div>
           </div>
 
           {/* Success Message */}
           {msg && msg.includes("successfully") ? (
-            <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
-              <div className="flex items-center gap-2 text-green-400">
+            <div
+              className={`mb-6 p-4 ${themeClasses.successBg} border ${themeClasses.successBorder} rounded-xl`}
+            >
+              <div
+                className={`flex items-center gap-2 ${themeClasses.successText}`}
+              >
                 <Check className="w-5 h-5" />
                 <span className="font-medium">{msg}</span>
               </div>
             </div>
           ) : msg ? (
-            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-              <div className="flex items-center gap-2 text-red-400">
+            <div
+              className={`mb-6 p-4 ${themeClasses.errorBg} border ${themeClasses.errorBorder} rounded-xl`}
+            >
+              <div
+                className={`flex items-center gap-2 ${themeClasses.errorText}`}
+              >
                 <AlertCircle className="w-5 h-5" />
                 <span className="font-medium">{msg}</span>
               </div>
@@ -294,26 +415,30 @@ export default function SignupPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Name Field */}
             <div>
-              <label className="block text-sm font-medium text-[#EEECF6] mb-2">
+              <label
+                className={`block text-sm font-medium ${themeClasses.text} mb-2`}
+              >
                 Full Name
               </label>
               <div className="relative">
                 <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                  <User className="w-5 h-5 text-[#1B42CB]" />
+                  <User className={`w-5 h-5 ${themeClasses.iconColor}`} />
                 </div>
                 <input
                   type="text"
                   required
-                  className={`w-full pl-12 pr-4 py-3 bg-[#191919]/50 border ${
-                    errors.name ? "border-red-500/50" : "border-[#1B42CB]/30"
-                  } rounded-xl text-[#EEECF6] placeholder-[#EEECF6]/40 focus:outline-none focus:border-[#1B42CB] focus:ring-2 focus:ring-[#1B42CB]/20 transition-all duration-300`}
+                  className={`w-full pl-12 pr-4 py-3 ${themeClasses.inputBg} border ${
+                    errors.name ? "border-red-500/50" : themeClasses.inputBorder
+                  } rounded-xl ${themeClasses.text} ${themeClasses.placeholder} focus:outline-none focus:border-[#1B42CB] focus:ring-2 focus:ring-[#1B42CB]/20 transition-all duration-300`}
                   placeholder="Enter your full name"
                   value={form.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
                 />
               </div>
               {errors.name && (
-                <p className="mt-2 text-sm text-red-400 flex items-center gap-1">
+                <p
+                  className={`mt-2 text-sm ${themeClasses.errorText} flex items-center gap-1`}
+                >
                   <AlertCircle className="w-4 h-4" />
                   {errors.name}
                 </p>
@@ -322,26 +447,32 @@ export default function SignupPage() {
 
             {/* Email Field */}
             <div>
-              <label className="block text-sm font-medium text-[#EEECF6] mb-2">
+              <label
+                className={`block text-sm font-medium ${themeClasses.text} mb-2`}
+              >
                 Email Address
               </label>
               <div className="relative">
                 <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                  <Mail className="w-5 h-5 text-[#1B42CB]" />
+                  <Mail className={`w-5 h-5 ${themeClasses.iconColor}`} />
                 </div>
                 <input
                   type="email"
                   required
-                  className={`w-full pl-12 pr-4 py-3 bg-[#191919]/50 border ${
-                    errors.email ? "border-red-500/50" : "border-[#1B42CB]/30"
-                  } rounded-xl text-[#EEECF6] placeholder-[#EEECF6]/40 focus:outline-none focus:border-[#1B42CB] focus:ring-2 focus:ring-[#1B42CB]/20 transition-all duration-300`}
+                  className={`w-full pl-12 pr-4 py-3 ${themeClasses.inputBg} border ${
+                    errors.email
+                      ? "border-red-500/50"
+                      : themeClasses.inputBorder
+                  } rounded-xl ${themeClasses.text} ${themeClasses.placeholder} focus:outline-none focus:border-[#1B42CB] focus:ring-2 focus:ring-[#1B42CB]/20 transition-all duration-300`}
                   placeholder="Enter your email"
                   value={form.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                 />
               </div>
               {errors.email && (
-                <p className="mt-2 text-sm text-red-400 flex items-center gap-1">
+                <p
+                  className={`mt-2 text-sm ${themeClasses.errorText} flex items-center gap-1`}
+                >
                   <AlertCircle className="w-4 h-4" />
                   {errors.email}
                 </p>
@@ -350,21 +481,23 @@ export default function SignupPage() {
 
             {/* Password Field */}
             <div>
-              <label className="block text-sm font-medium text-[#EEECF6] mb-2">
+              <label
+                className={`block text-sm font-medium ${themeClasses.text} mb-2`}
+              >
                 Password
               </label>
               <div className="relative">
                 <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                  <Lock className="w-5 h-5 text-[#1B42CB]" />
+                  <Lock className={`w-5 h-5 ${themeClasses.iconColor}`} />
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
                   required
-                  className={`w-full pl-12 pr-12 py-3 bg-[#191919]/50 border ${
+                  className={`w-full pl-12 pr-12 py-3 ${themeClasses.inputBg} border ${
                     errors.password
                       ? "border-red-500/50"
-                      : "border-[#1B42CB]/30"
-                  } rounded-xl text-[#EEECF6] placeholder-[#EEECF6]/40 focus:outline-none focus:border-[#1B42CB] focus:ring-2 focus:ring-[#1B42CB]/20 transition-all duration-300`}
+                      : themeClasses.inputBorder
+                  } rounded-xl ${themeClasses.text} ${themeClasses.placeholder} focus:outline-none focus:border-[#1B42CB] focus:ring-2 focus:ring-[#1B42CB]/20 transition-all duration-300`}
                   placeholder="Create a strong password"
                   value={form.password}
                   onChange={(e) => handlePasswordChange(e.target.value)}
@@ -372,7 +505,7 @@ export default function SignupPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#EEECF6]/60 hover:text-[#EEECF6] transition-colors"
+                  className={`absolute right-4 top-1/2 transform -translate-y-1/2 ${themeClasses.textMuted} hover:${themeClasses.text} transition-colors`}
                 >
                   {showPassword ? (
                     <EyeOff className="w-5 h-5" />
@@ -386,22 +519,16 @@ export default function SignupPage() {
               {form.password && (
                 <div className="mt-2">
                   <div className="flex justify-between text-sm mb-1">
-                    <span className="text-[#EEECF6]/60">
+                    <span className={themeClasses.textMuted}>
                       Password strength:
                     </span>
-                    <span
-                      className={`font-medium ${
-                        passwordStrength <= 2
-                          ? "text-red-400"
-                          : passwordStrength === 3
-                          ? "text-yellow-400"
-                          : "text-green-400"
-                      }`}
-                    >
+                    <span className={getStrengthTextColor()}>
                       {getPasswordStrengthText()}
                     </span>
                   </div>
-                  <div className="h-2 bg-[#191919] rounded-full overflow-hidden">
+                  <div
+                    className={`h-2 ${themeClasses.inputBg} rounded-full overflow-hidden`}
+                  >
                     <div
                       className={`h-full ${getPasswordStrengthColor()} transition-all duration-300`}
                       style={{ width: `${(passwordStrength / 5) * 100}%` }}
@@ -411,7 +538,9 @@ export default function SignupPage() {
               )}
 
               {errors.password && (
-                <p className="mt-2 text-sm text-red-400 flex items-center gap-1">
+                <p
+                  className={`mt-2 text-sm ${themeClasses.errorText} flex items-center gap-1`}
+                >
                   <AlertCircle className="w-4 h-4" />
                   {errors.password}
                 </p>
@@ -420,21 +549,23 @@ export default function SignupPage() {
 
             {/* Confirm Password Field */}
             <div>
-              <label className="block text-sm font-medium text-[#EEECF6] mb-2">
+              <label
+                className={`block text-sm font-medium ${themeClasses.text} mb-2`}
+              >
                 Confirm Password
               </label>
               <div className="relative">
                 <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                  <Lock className="w-5 h-5 text-[#1B42CB]" />
+                  <Lock className={`w-5 h-5 ${themeClasses.iconColor}`} />
                 </div>
                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   required
-                  className={`w-full pl-12 pr-12 py-3 bg-[#191919]/50 border ${
+                  className={`w-full pl-12 pr-12 py-3 ${themeClasses.inputBg} border ${
                     errors.confirmPassword
                       ? "border-red-500/50"
-                      : "border-[#1B42CB]/30"
-                  } rounded-xl text-[#EEECF6] placeholder-[#EEECF6]/40 focus:outline-none focus:border-[#1B42CB] focus:ring-2 focus:ring-[#1B42CB]/20 transition-all duration-300`}
+                      : themeClasses.inputBorder
+                  } rounded-xl ${themeClasses.text} ${themeClasses.placeholder} focus:outline-none focus:border-[#1B42CB] focus:ring-2 focus:ring-[#1B42CB]/20 transition-all duration-300`}
                   placeholder="Confirm your password"
                   value={form.confirmPassword}
                   onChange={(e) =>
@@ -444,7 +575,7 @@ export default function SignupPage() {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#EEECF6]/60 hover:text-[#EEECF6] transition-colors"
+                  className={`absolute right-4 top-1/2 transform -translate-y-1/2 ${themeClasses.textMuted} hover:${themeClasses.text} transition-colors`}
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="w-5 h-5" />
@@ -454,7 +585,9 @@ export default function SignupPage() {
                 </button>
               </div>
               {errors.confirmPassword && (
-                <p className="mt-2 text-sm text-red-400 flex items-center gap-1">
+                <p
+                  className={`mt-2 text-sm ${themeClasses.errorText} flex items-center gap-1`}
+                >
                   <AlertCircle className="w-4 h-4" />
                   {errors.confirmPassword}
                 </p>
@@ -464,7 +597,9 @@ export default function SignupPage() {
             {/* Admin Secret Field */}
             {form.role === "admin" && (
               <div>
-                <label className="block text-sm font-medium text-[#EEECF6] mb-2">
+                <label
+                  className={`block text-sm font-medium ${themeClasses.text} mb-2`}
+                >
                   Admin Secret Key
                 </label>
                 <div className="relative">
@@ -474,11 +609,11 @@ export default function SignupPage() {
                   <input
                     type={showAdminSecret ? "text" : "password"}
                     required={form.role === "admin"}
-                    className={`w-full pl-12 pr-12 py-3 bg-[#191919]/50 border ${
+                    className={`w-full pl-12 pr-12 py-3 ${themeClasses.inputBg} border ${
                       errors.adminSecret
                         ? "border-red-500/50"
                         : "border-[#FF2F6C]/30"
-                    } rounded-xl text-[#EEECF6] placeholder-[#EEECF6]/40 focus:outline-none focus:border-[#FF2F6C] focus:ring-2 focus:ring-[#FF2F6C]/20 transition-all duration-300`}
+                    } rounded-xl ${themeClasses.text} ${themeClasses.placeholder} focus:outline-none focus:border-[#FF2F6C] focus:ring-2 focus:ring-[#FF2F6C]/20 transition-all duration-300`}
                     placeholder="Enter admin secret key"
                     value={form.adminSecret}
                     onChange={(e) =>
@@ -488,7 +623,7 @@ export default function SignupPage() {
                   <button
                     type="button"
                     onClick={() => setShowAdminSecret(!showAdminSecret)}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#EEECF6]/60 hover:text-[#FF2F6C] transition-colors"
+                    className={`absolute right-4 top-1/2 transform -translate-y-1/2 ${themeClasses.textMuted} hover:text-[#FF2F6C] transition-colors`}
                   >
                     {showAdminSecret ? (
                       <EyeOff className="w-5 h-5" />
@@ -498,7 +633,9 @@ export default function SignupPage() {
                   </button>
                 </div>
                 {errors.adminSecret && (
-                  <p className="mt-2 text-sm text-red-400 flex items-center gap-1">
+                  <p
+                    className={`mt-2 text-sm ${themeClasses.errorText} flex items-center gap-1`}
+                  >
                     <AlertCircle className="w-4 h-4" />
                     {errors.adminSecret}
                   </p>
@@ -515,21 +652,18 @@ export default function SignupPage() {
                 type="checkbox"
                 id="terms"
                 required
-                className="w-4 h-4 mt-1 rounded bg-[#191919]/50 border border-[#1B42CB]/30 text-[#1B42CB] focus:ring-[#1B42CB]/20 focus:ring-2"
+                className={`w-4 h-4 mt-1 rounded ${themeClasses.inputBg} border ${themeClasses.inputBorder} text-[#1B42CB] focus:ring-[#1B42CB]/20 focus:ring-2`}
               />
-              <label htmlFor="terms" className="ml-2 text-sm text-[#EEECF6]/70">
+              <label
+                htmlFor="terms"
+                className={`ml-2 text-sm ${themeClasses.textSecondary}`}
+              >
                 I agree to the{" "}
-                <Link
-                  to="/terms"
-                  className="text-[#1B42CB] hover:text-[#FF2F6C] transition-colors"
-                >
+                <Link to="/terms" className={themeClasses.iconColor}>
                   Terms of Service
                 </Link>{" "}
                 and{" "}
-                <Link
-                  to="/privacy"
-                  className="text-[#1B42CB] hover:text-[#FF2F6C] transition-colors"
-                >
+                <Link to="/privacy" className={themeClasses.iconColor}>
                   Privacy Policy
                 </Link>
               </label>
@@ -539,30 +673,21 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-4 text-white font-bold rounded-xl hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
+              className={`w-full py-4 text-white font-bold rounded-xl hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 bg-gradient-to-r ${
                 form.role === "admin"
-                  ? "bg-linear-to-r from-[#FF2F6C] to-red-600 hover:shadow-[#FF2F6C]/20"
-                  : "bg-linear-to-r from-[#1B42CB] to-[#FF2F6C] hover:shadow-[#FF2F6C]/20"
+                  ? themeClasses.buttonGradient.admin
+                  : themeClasses.buttonGradient.primary
               }`}
             >
               {isLoading ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Creating {form.role === "admin" ? "Admin" : ""} Account...
+                  Creating Account...
                 </>
               ) : (
                 <>
-                  {form.role === "admin" ? (
-                    <>
-                      <Crown className="w-5 h-5" />
-                      Create Admin Account
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-5 h-5" />
-                      Create User Account
-                    </>
-                  )}
+                  <UserPlus className="w-5 h-5" />
+                  Create {form.role === "admin" ? "Admin" : "User"} Account
                 </>
               )}
             </button>
@@ -570,73 +695,27 @@ export default function SignupPage() {
             {/* Divider */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#1B42CB]/20"></div>
+                <div className={`w-full border-t ${themeClasses.border}`}></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-[#191919]/70 text-[#EEECF6]/50">
+                <span
+                  className={`px-2 ${themeClasses.cardBg} ${themeClasses.textMuted}`}
+                >
                   Already have an account?
                 </span>
               </div>
             </div>
 
             {/* Login Links */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3">
               <Link
                 to="/login"
-                className="px-4 py-3 bg-[#191919]/50 border border-[#1B42CB]/30 text-[#EEECF6] font-medium rounded-xl hover:bg-[#1B42CB]/10 transition-all duration-300 text-center"
+                className={`px-4 py-3 ${themeClasses.inputBg} border ${themeClasses.border} ${themeClasses.text} font-medium rounded-xl hover:bg-[#1B42CB]/10 transition-all duration-300 text-center`}
               >
-                User Login
-              </Link>
-              <Link
-                to="/admin-login"
-                className="px-4 py-3 bg-[#191919]/50 border border-[#FF2F6C]/30 text-[#EEECF6] font-medium rounded-xl hover:bg-[#FF2F6C]/10 transition-all duration-300 text-center"
-              >
-                Admin Login
+                Sign In
               </Link>
             </div>
           </form>
-        </div>
-
-        {/* Account Type Benefits */}
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div
-            className={`p-4 rounded-xl border transition-all duration-300 ${
-              form.role === "user"
-                ? "bg-linear-to-br from-[#1B42CB]/10 to-transparent border-[#1B42CB]/30"
-                : "bg-[#191919]/30 border-[#1B42CB]/20"
-            }`}
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-[#1B42CB]/10 flex items-center justify-center">
-                <User className="w-4 h-4 text-[#1B42CB]" />
-              </div>
-              <span className="font-medium text-[#EEECF6]">User Account</span>
-            </div>
-            <ul className="space-y-1 text-sm text-[#EEECF6]/60">
-              <li>• Book parking slots</li>
-              <li>• View booking history</li>
-              <li>• Get parking recommendations</li>
-            </ul>
-          </div>
-          <div
-            className={`p-4 rounded-xl border transition-all duration-300 ${
-              form.role === "admin"
-                ? "bg-linear-to-br from-[#FF2F6C]/10 to-transparent border-[#FF2F6C]/30"
-                : "bg-[#191919]/30 border-[#FF2F6C]/20"
-            }`}
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-[#FF2F6C]/10 flex items-center justify-center">
-                <Crown className="w-4 h-4 text-[#FF2F6C]" />
-              </div>
-              <span className="font-medium text-[#EEECF6]">Admin Account</span>
-            </div>
-            <ul className="space-y-1 text-sm text-[#EEECF6]/60">
-              <li>• Manage parking slots</li>
-              <li>• View all users</li>
-              <li>• Access analytics</li>
-            </ul>
-          </div>
         </div>
       </div>
 

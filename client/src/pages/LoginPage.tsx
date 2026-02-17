@@ -1,7 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
-import { Eye, EyeOff, Mail, Lock, Car } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  Car,
+  AlertCircle,
+  LogIn,
+} from "lucide-react";
 
 export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -9,8 +17,71 @@ export default function LoginPage() {
   const [msg, setMsg] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  // Detect system theme
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+    setTheme(mediaQuery.matches ? "light" : "dark");
+
+    const handler = (e: MediaQueryListEvent) => {
+      setTheme(e.matches ? "light" : "dark");
+    };
+
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
+  }, []);
+
+  // Theme-based classes
+  const getThemeClasses = () => {
+    return theme === "light"
+      ? {
+          bg: "bg-gray-50",
+          cardBg: "bg-white/90",
+          text: "text-gray-900",
+          textSecondary: "text-gray-600",
+          textMuted: "text-gray-500",
+          border: "border-gray-200",
+          borderAccent: "border-blue-600/30",
+          inputBg: "bg-white",
+          inputBorder: "border-gray-300",
+          placeholder: "placeholder-gray-400",
+          iconColor: "text-blue-600",
+          iconSecondary: "text-pink-600",
+          buttonGradient: "from-blue-600 to-pink-600",
+          hoverBg: "hover:bg-blue-600/10",
+          shadow: "shadow-blue-600/10",
+          overlay: "bg-black/5",
+          errorBg: "bg-red-50",
+          errorBorder: "border-red-300",
+          errorText: "text-red-600",
+        }
+      : {
+          bg: "bg-[#191919]",
+          cardBg: "bg-[#191919]/70",
+          text: "text-[#EEECF6]",
+          textSecondary: "text-[#EEECF6]/70",
+          textMuted: "text-[#EEECF6]/40",
+          border: "border-[#1B42CB]/30",
+          borderAccent: "border-[#1B42CB]/30",
+          inputBg: "bg-[#191919]/50",
+          inputBorder: "border-[#1B42CB]/30",
+          placeholder: "placeholder-[#EEECF6]/40",
+          iconColor: "text-[#1B42CB]",
+          iconSecondary: "text-[#FF2F6C]",
+          buttonGradient: "from-[#1B42CB] to-[#FF2F6C]",
+          hoverBg: "hover:bg-[#1B42CB]/10",
+          shadow: "shadow-[#1B42CB]/10",
+          overlay: "bg-black/40",
+          errorBg: "bg-red-500/10",
+          errorBorder: "border-red-500/30",
+          errorText: "text-red-400",
+        };
+  };
+
+  const themeClasses = getThemeClasses();
 
   const validateForm = () => {
     const newErrors = { email: "", password: "" };
@@ -48,14 +119,16 @@ export default function LoginPage() {
     setMsg("");
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // Authorization header 
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/auth/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(form),
         },
-        body: JSON.stringify(form),
-      });
+      );
 
       const data = await res.json();
 
@@ -75,7 +148,6 @@ export default function LoginPage() {
 
   const handleInputChange = (field: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }));
     }
@@ -83,7 +155,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-[#191919] via-[#0f0f0f] to-[#191919] flex items-center justify-center p-4">
+    <div
+      className={`${themeClasses.bg} transition-colors duration-300 flex items-center justify-center p-4`}
+    >
       {/* Animated Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#1B42CB]/10 rounded-full blur-3xl animate-pulse"></div>
@@ -93,48 +167,38 @@ export default function LoginPage() {
 
       {/* Login Card */}
       <div className="relative w-full max-w-md">
-        {/* Decorative Elements */}
-        <div className="absolute -top-6 -left-6 w-16 h-16 backdrop-blur-xl bg-[#1B42CB]/20 border border-[#1B42CB]/30 rounded-2xl flex items-center justify-center animate-float">
-          <Car className="w-8 h-8 text-[#1B42CB]" />
-        </div>
-        <div className="absolute -bottom-6 -right-6 w-14 h-14 backdrop-blur-xl bg-[#FF2F6C]/20 border border-[#FF2F6C]/30 rounded-2xl flex items-center justify-center animate-float delay-500">
-          <Lock className="w-7 h-7 text-[#FF2F6C]" />
-        </div>
-
         {/* Main Card */}
-        <div className="backdrop-blur-xl bg-[#191919]/70 border border-[#1B42CB]/30 rounded-3xl p-8 shadow-2xl shadow-[#1B42CB]/10">
+        <div
+          className={`backdrop-blur-xl ${themeClasses.cardBg} border ${themeClasses.border} rounded-3xl p-8 shadow-2xl ${themeClasses.shadow}`}
+        >
           {/* Header */}
           <div className="text-center mb-8">
             <Link to="/" className="inline-block mb-6">
-              <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-[#1B42CB] to-[#FF2F6C] flex items-center justify-center mx-auto hover:scale-105 transition-transform duration-300">
+              <div
+                className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${themeClasses.buttonGradient} flex items-center justify-center mx-auto hover:scale-105 transition-transform duration-300`}
+              >
                 <Car className="w-8 h-8 text-white" />
               </div>
             </Link>
-            <h1 className="text-3xl font-bold bg-linear-to-r from-[#EEECF6] to-[#1B42CB] bg-clip-text text-transparent mb-2">
+            <h1
+              className={`text-3xl font-bold bg-gradient-to-r ${themeClasses.buttonGradient} bg-clip-text text-transparent mb-2`}
+            >
               Welcome Back
             </h1>
-            <p className="text-[#EEECF6]/60">
-              Sign in to access your SmartPark account
+            <p className={themeClasses.textSecondary}>
+              Sign in to your SmartPark account
             </p>
           </div>
 
           {/* Error Message */}
           {msg && (
-            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-              <div className="flex items-center gap-2 text-red-400">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+            <div
+              className={`mb-6 p-4 ${themeClasses.errorBg} border ${themeClasses.errorBorder} rounded-xl`}
+            >
+              <div
+                className={`flex items-center gap-2 ${themeClasses.errorText}`}
+              >
+                <AlertCircle className="w-5 h-5" />
                 <span className="font-medium">{msg}</span>
               </div>
             </div>
@@ -144,19 +208,23 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field */}
             <div>
-              <label className="block text-sm font-medium text-[#EEECF6] mb-2">
+              <label
+                className={`block text-sm font-medium ${themeClasses.text} mb-2`}
+              >
                 Email Address
               </label>
               <div className="relative">
                 <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                  <Mail className="w-5 h-5 text-[#1B42CB]" />
+                  <Mail className={`w-5 h-5 ${themeClasses.iconColor}`} />
                 </div>
                 <input
                   type="email"
                   required
-                  className={`w-full pl-12 pr-4 py-3 bg-[#191919]/50 border ${
-                    errors.email ? "border-red-500/50" : "border-[#1B42CB]/30"
-                  } rounded-xl text-[#EEECF6] placeholder-[#EEECF6]/40 focus:outline-none focus:border-[#1B42CB] focus:ring-2 focus:ring-[#1B42CB]/20 transition-all duration-300`}
+                  className={`w-full pl-12 pr-4 py-3 ${themeClasses.inputBg} border ${
+                    errors.email
+                      ? "border-red-500/50"
+                      : themeClasses.inputBorder
+                  } rounded-xl ${themeClasses.text} ${themeClasses.placeholder} focus:outline-none focus:border-[#1B42CB] focus:ring-2 focus:ring-[#1B42CB]/20 transition-all duration-300`}
                   placeholder="Enter your email"
                   value={form.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
@@ -164,20 +232,10 @@ export default function LoginPage() {
                 />
               </div>
               {errors.email && (
-                <p className="mt-2 text-sm text-red-400 flex items-center gap-1">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
+                <p
+                  className={`mt-2 text-sm ${themeClasses.errorText} flex items-center gap-1`}
+                >
+                  <AlertCircle className="w-4 h-4" />
                   {errors.email}
                 </p>
               )}
@@ -186,28 +244,30 @@ export default function LoginPage() {
             {/* Password Field */}
             <div>
               <div className="flex justify-between items-center mb-2">
-                <label className="block text-sm font-medium text-[#EEECF6]">
+                <label
+                  className={`block text-sm font-medium ${themeClasses.text}`}
+                >
                   Password
                 </label>
                 <Link
                   to="/forgot-password"
-                  className="text-sm font-medium text-[#1B42CB] hover:text-[#FF2F6C] transition-colors"
+                  className={`text-sm font-medium ${themeClasses.iconColor} hover:${themeClasses.iconSecondary} transition-colors`}
                 >
                   Forgot password?
                 </Link>
               </div>
               <div className="relative">
                 <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                  <Lock className="w-5 h-5 text-[#1B42CB]" />
+                  <Lock className={`w-5 h-5 ${themeClasses.iconColor}`} />
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
                   required
-                  className={`w-full pl-12 pr-12 py-3 bg-[#191919]/50 border ${
+                  className={`w-full pl-12 pr-12 py-3 ${themeClasses.inputBg} border ${
                     errors.password
                       ? "border-red-500/50"
-                      : "border-[#1B42CB]/30"
-                  } rounded-xl text-[#EEECF6] placeholder-[#EEECF6]/40 focus:outline-none focus:border-[#1B42CB] focus:ring-2 focus:ring-[#1B42CB]/20 transition-all duration-300`}
+                      : themeClasses.inputBorder
+                  } rounded-xl ${themeClasses.text} ${themeClasses.placeholder} focus:outline-none focus:border-[#1B42CB] focus:ring-2 focus:ring-[#1B42CB]/20 transition-all duration-300`}
                   placeholder="Enter your password"
                   value={form.password}
                   onChange={(e) =>
@@ -218,7 +278,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-[#EEECF6]/60 hover:text-[#EEECF6] transition-colors"
+                  className={`absolute right-4 top-1/2 transform -translate-y-1/2 ${themeClasses.textMuted} hover:${themeClasses.text} transition-colors`}
                 >
                   {showPassword ? (
                     <EyeOff className="w-5 h-5" />
@@ -228,20 +288,10 @@ export default function LoginPage() {
                 </button>
               </div>
               {errors.password && (
-                <p className="mt-2 text-sm text-red-400 flex items-center gap-1">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
+                <p
+                  className={`mt-2 text-sm ${themeClasses.errorText} flex items-center gap-1`}
+                >
+                  <AlertCircle className="w-4 h-4" />
                   {errors.password}
                 </p>
               )}
@@ -252,11 +302,11 @@ export default function LoginPage() {
               <input
                 type="checkbox"
                 id="remember"
-                className="w-4 h-4 rounded bg-[#191919]/50 border border-[#1B42CB]/30 text-[#1B42CB] focus:ring-[#1B42CB]/20 focus:ring-2"
+                className={`w-4 h-4 rounded ${themeClasses.inputBg} border ${themeClasses.inputBorder} text-[#1B42CB] focus:ring-[#1B42CB]/20 focus:ring-2`}
               />
               <label
                 htmlFor="remember"
-                className="ml-2 text-sm text-[#EEECF6]/70"
+                className={`ml-2 text-sm ${themeClasses.textSecondary}`}
               >
                 Remember me for 30 days
               </label>
@@ -266,7 +316,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-4 bg-linear-to-r from-[#1B42CB] to-[#FF2F6C] text-white font-bold rounded-xl hover:shadow-xl hover:shadow-[#FF2F6C]/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className={`w-full py-4 bg-gradient-to-r ${themeClasses.buttonGradient} text-white font-bold rounded-xl hover:shadow-xl hover:shadow-[#FF2F6C]/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
             >
               {isLoading ? (
                 <>
@@ -276,19 +326,7 @@ export default function LoginPage() {
               ) : (
                 <>
                   Sign In
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                    />
-                  </svg>
+                  <LogIn className="w-5 h-5" />
                 </>
               )}
             </button>
@@ -296,85 +334,23 @@ export default function LoginPage() {
             {/* Divider */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#1B42CB]/20"></div>
+                <div className={`w-full border-t ${themeClasses.border}`}></div>
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-[#191919]/70 text-[#EEECF6]/50">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-
-            {/* Social Login */}
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                className="flex items-center justify-center gap-2 py-3 bg-[#191919]/50 border border-[#1B42CB]/20 rounded-xl text-[#EEECF6] hover:bg-[#1B42CB]/10 transition-all duration-300"
-              >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path
-                    fill="#4285F4"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  />
-                </svg>
-                Google
-              </button>
-              <button
-                type="button"
-                className="flex items-center justify-center gap-2 py-3 bg-[#191919]/50 border border-[#1B42CB]/20 rounded-xl text-[#EEECF6] hover:bg-[#1B42CB]/10 transition-all duration-300"
-              >
-                <svg className="w-5 h-5" fill="#1877F2" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                </svg>
-                Facebook
-              </button>
             </div>
 
             {/* Sign Up Link */}
             <div className="text-center pt-4">
-              <p className="text-[#EEECF6]/60">
+              <p className={themeClasses.textSecondary}>
                 Don't have an account?{" "}
                 <Link
                   to="/signup"
-                  className="font-medium text-[#1B42CB] hover:text-[#FF2F6C] transition-colors"
+                  className={`font-medium ${themeClasses.iconColor} hover:${themeClasses.iconSecondary} transition-colors`}
                 >
                   Sign up for free
                 </Link>
               </p>
             </div>
           </form>
-        </div>
-
-        {/* Security Note */}
-        <div className="mt-6 text-center">
-          <div className="inline-flex items-center gap-2 text-sm text-[#EEECF6]/40">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-              />
-            </svg>
-            <span>Your data is encrypted and secure</span>
-          </div>
         </div>
       </div>
 
