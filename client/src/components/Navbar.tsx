@@ -50,21 +50,19 @@ const Navbar: React.FC = () => {
         <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-3 group">
-              <div className="relative">
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-linear-to-br from-[#1B42CB] to-[#FF2F6C] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-lg md:text-xl font-bold text-white font-[engagement]">
-                    Sp
-                  </span>
-                </div>
-                <div className="absolute -inset-1 bg-linear-to-r from-[#1B42CB] to-[#FF2F6C] rounded-xl blur opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
-              </div>
-              <div className="hidden sm:block">
-                <h1 className="text-xl md:text-4xl font-bold bg-linear-to-r from-[#EEECF6] to-[#1B42CB] bg-clip-text text-transparent font-[engagement]">
-                  SmartPark
-                </h1>
-                <p className="text-xs text-[#EEECF6]/60 font-[cursive]">-Intelligent Parking</p>
-              </div>
+            <Link to="/" className="flex items-center group relative">
+              <img
+                src="/logo.png"
+                alt="SmartPark"
+                className="h-11 md:h-15 w-auto object-contain transition-all duration-300 group-hover:scale-110"
+                style={{
+                  filter:
+                    "brightness(0) invert(1) drop-shadow(0 0 8px rgba(27,66,203,0.5))",
+                }}
+              />
+
+              {/* Glow Effect - image ke peeche */}
+              <div className="absolute inset-0 bg-linear-to-r from-[#1B42CB] to-[#FF2F6C] rounded-full blur-2xl opacity-0 group-hover:opacity-60 transition-opacity duration-300 -z-10"></div>
             </Link>
 
             {/* Desktop Navigation */}
