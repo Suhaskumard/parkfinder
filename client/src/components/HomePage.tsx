@@ -2,10 +2,34 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import MapComponent from "./MapComponent";
 import * as Icons from "lucide-react";
+interface ParkingSlot {
+  _id: string;
+  name: string;
+  location: string;
+  pricePerHour: number;
+  status: string;
+  distance: string;
+  capacity: number;
+  availableSlots: number;
+  isCovered: boolean;
+  securityLevel: string;
+  rating: number;
+  openingTime: string;
+  closingTime: string;
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
+}
+  interface Coordinates {
+    lat: number;
+    lng: number;
+  }
+
 
 const HomePage: React.FC = () => {
   const [activeSection, setActiveSection] = useState(0);
-  const [parkingSlots, setParkingSlots] = useState([]);
+  const [parkingSlots, setParkingSlots] = useState<ParkingSlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [theme, setTheme] = useState<"light" | "dark">("dark");
@@ -23,15 +47,7 @@ const HomePage: React.FC = () => {
     return () => mediaQuery.removeEventListener("change", handler);
   }, []);
 
-  interface ParkingSlot {
-    [key: string]: unknown;
-  }
-
-  interface Coordinates {
-    lat: number;
-    lng: number;
-  }
-
+  
   const mockCoordinates: Coordinates[] = [
     { lat: 28.6159, lng: 77.2095 }, // Slot 1
     { lat: 28.612, lng: 77.208 }, // Slot 2
@@ -45,11 +61,19 @@ const HomePage: React.FC = () => {
     { lat: 28.6095, lng: 77.204 }, // Slot 10
   ];
 
-  const API = import.meta.env.VITE_API_URL;
+  const API = import.meta.env.VITE_API_URL || "http://localhost:6000";
 
   const fetchParkingSlots = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const response = await fetch(`${API}/api/parking`);
+
+      // Check response status
+      if (!response.ok) {
+        throw new Error("Failed to fetch parking data");
+      }
+
       const result = await response.json();
 
       if (result.success) {
@@ -64,10 +88,11 @@ const HomePage: React.FC = () => {
         );
         setParkingSlots(slotsWithCoordinates);
       } else {
-        setError(result.message);
+        setError(result.message || "Something went wrong");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      console.error("Fetch Error:", err);
+      setError(err instanceof Error ? err.message : "Unknown error occurred");
       console.error(err);
     } finally {
       setLoading(false);
@@ -162,6 +187,20 @@ const HomePage: React.FC = () => {
   };
 
   const themeClasses = getThemeClasses();
+
+  const occupancyPercentage = parkingSlots[0]
+    ? (parkingSlots[0].availableSlots / parkingSlots[0].capacity) * 100
+    : 0;
+
+  const strokeDashoffset = 251.2 - (251.2 * occupancyPercentage) / 100;
+
+if (loading) {
+  return (
+    <div className="min-h-screen flex items-center justify-center text-white">
+      Loading...
+    </div>
+  );
+}
 
   return (
     <div
@@ -287,13 +326,14 @@ const HomePage: React.FC = () => {
                             <h3
                               className={`text-2xl font-bold ${themeClasses.text}`}
                             >
-                              Platinum Tower
+                              {parkingSlots[0]?.name || "Loading Parking..."}
                             </h3>
                             <div className="flex items-center gap-2">
                               <span
                                 className={`text-sm ${themeClasses.textSecondary}`}
                               >
-                                Downtown
+                                {parkingSlots[0]?.location ||
+                                  "Location not available"}
                               </span>
                               <span className="px-2 py-1 bg-green-500/20 text-green-500 text-xs rounded-full">
                                 TOP RATED
@@ -325,7 +365,8 @@ const HomePage: React.FC = () => {
                           <div
                             className={`text-3xl font-bold ${themeClasses.text} mt-1`}
                           >
-                            12/24
+                            {parkingSlots[0]?.availableSlots}/
+                            {parkingSlots[0]?.capacity}{" "}
                           </div>
                         </div>
                         <div className="relative">
@@ -351,7 +392,7 @@ const HomePage: React.FC = () => {
                                 strokeWidth="8"
                                 strokeLinecap="round"
                                 strokeDasharray="251.2"
-                                strokeDashoffset="75.36"
+                                strokeDashoffset={strokeDashoffset}
                                 transform="rotate(-90 50 50)"
                               />
                               <defs>
@@ -370,7 +411,14 @@ const HomePage: React.FC = () => {
                           </div>
                           <div className="absolute inset-0 flex items-center justify-center">
                             <span className={`text-white font-bold text-lg`}>
-                              50%
+                              {parkingSlots[0]
+                                ? Math.round(
+                                    (parkingSlots[0].availableSlots /
+                                      parkingSlots[0].capacity) *
+                                      100,
+                                  )
+                                : 0}
+                              %
                             </span>
                           </div>
                         </div>
@@ -397,7 +445,7 @@ const HomePage: React.FC = () => {
                         <div
                           className={`text-2xl font-bold ${themeClasses.text}`}
                         >
-                          ₹80/hr
+                          ₹{parkingSlots[0]?.pricePerHour}/hr
                         </div>
                         <div
                           className={`text-xs ${themeClasses.textSecondary}`}
@@ -416,7 +464,7 @@ const HomePage: React.FC = () => {
                         <div
                           className={`text-2xl font-bold ${themeClasses.text}`}
                         >
-                          0.8 km
+                          {parkingSlots[0]?.distance}
                         </div>
                         <div
                           className={`text-xs ${themeClasses.textSecondary}`}
@@ -435,7 +483,7 @@ const HomePage: React.FC = () => {
                         <div
                           className={`text-2xl font-bold ${themeClasses.text}`}
                         >
-                          COVERED
+                          {parkingSlots[0]?.isCovered ? "COVERED" : "OPEN"}
                         </div>
                         <div
                           className={`text-xs ${themeClasses.textSecondary}`}
@@ -455,7 +503,7 @@ const HomePage: React.FC = () => {
                           <span
                             className={`text-2xl font-bold ${themeClasses.text}`}
                           >
-                            4.8
+                            {parkingSlots[0]?.rating}
                           </span>
                           <span className="text-yellow-400">
                             {Array(5).fill("★").join("")}
