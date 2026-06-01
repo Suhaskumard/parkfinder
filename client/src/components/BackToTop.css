@@ -1,0 +1,194 @@
+/* Premium Futuristic Back to Top Styles */
+
+.back-to-top {
+  position: fixed;
+  bottom: 2.5rem;
+  right: 2.5rem;
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  background: rgba(25, 25, 25, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #eeecf6;
+  border: 1.5px solid rgba(27, 66, 203, 0.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  z-index: 999;
+  outline: none;
+  overflow: visible; /* Needed for glow ring to expand beyond boundaries */
+  
+  /* Initial hidden state for premium transition */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(30px) scale(0.85);
+  transition: 
+    opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), 
+    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), 
+    border-color 0.3s ease, 
+    box-shadow 0.3s ease,
+    color 0.3s ease;
+}
+
+/* Visible state */
+.back-to-top.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+
+/* Background neon shimmer layer */
+.back-to-top::before {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1b42cb, #ff2f6c, #1b42cb);
+  background-size: 200% 200%;
+  z-index: -1;
+  opacity: 0.4;
+  filter: blur(5px);
+  transition: opacity 0.4s ease, filter 0.4s ease;
+}
+
+/* Hover state styling */
+.back-to-top:hover {
+  transform: translateY(-6px) scale(1.1);
+  border-color: rgba(255, 47, 108, 0.8);
+  box-shadow: 
+    0 12px 30px rgba(255, 47, 108, 0.35), 
+    0 0 20px rgba(27, 66, 203, 0.35);
+  color: #ffffff;
+}
+
+/* Animate neon outer ring on hover */
+.back-to-top:hover::before {
+  opacity: 1;
+  filter: blur(8px);
+  animation: rotate-neon-ring 3s linear infinite;
+}
+
+@keyframes rotate-neon-ring {
+  0% {
+    background-position: 0% 50%;
+    transform: rotate(0deg);
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+    transform: rotate(360deg);
+  }
+}
+
+/* Focus styling for keyboard accessibility */
+.back-to-top:focus-visible {
+  outline: 3px solid #ff2f6c;
+  outline-offset: 3px;
+}
+
+/* Active click state: button compresses slightly */
+.back-to-top:active {
+  transform: translateY(-2px) scale(0.92);
+  box-shadow: 
+    0 6px 15px rgba(255, 47, 108, 0.25), 
+    0 0 12px rgba(27, 66, 203, 0.25);
+}
+
+/* Container for arrow icon to isolate rotation transforms */
+.back-to-top-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Rotate arrow 180 degrees downwards during active scrolling to top */
+.back-to-top.scrolling .back-to-top-icon {
+  transform: rotate(180deg);
+}
+
+/* Arrow SVG vector styling */
+.back-to-top svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  fill: none;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Micro-interaction: nudge arrow slightly up on hover */
+.back-to-top:hover:not(.scrolling) svg {
+  transform: translateY(-3px);
+}
+
+/* Post-Scroll Pulse Animation */
+@keyframes top-glow-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 47, 108, 0.8), 0 0 0 0 rgba(27, 66, 203, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 20px rgba(255, 47, 108, 0), 0 0 0 15px rgba(27, 66, 203, 0);
+  }
+  100% {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  }
+}
+
+.back-to-top.pulse {
+  animation: top-glow-pulse 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Responsive Scaling */
+@media (max-width: 768px) {
+  .back-to-top {
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 3.2rem;
+    height: 3.2rem;
+  }
+  
+  .back-to-top svg {
+    width: 1.3rem;
+    height: 1.3rem;
+  }
+}
+
+/* Reduced Motion Override */
+@media (prefers-reduced-motion: reduce) {
+  .back-to-top {
+    transition: opacity 0.15s linear !important;
+    transform: none !important;
+  }
+  
+  .back-to-top::before {
+    animation: none !important;
+    display: none !important;
+  }
+  
+  .back-to-top:hover {
+    transform: none !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;
+  }
+  
+  .back-to-top-icon {
+    transition: none !important;
+  }
+  
+  .back-to-top.scrolling .back-to-top-icon {
+    transform: none !important;
+  }
+  
+  .back-to-top:hover:not(.scrolling) svg {
+    transform: none !important;
+  }
+  
+  .back-to-top.pulse {
+    animation: none !important;
+  }
+}
