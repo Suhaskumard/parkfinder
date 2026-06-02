@@ -676,10 +676,8 @@ const HomePage: React.FC = () => {
   />
 </a>
                   <a
-  href="https://wa.me/919876543210"
-  target="_blank"
-  rel="noopener noreferrer"
-  className={`w-10 h-10 rounded-lg bg-black/5 border ${themeClasses.border} flex items-center justify-center hover:border-[#FF2F6C]/30 transition-colors`}
+  href="sms:+919876543210"
+  className={`w-10 h-10 rounded-lg bg-black/5 border ${themeClasses.border} flex items-center justify-center hover:border-[#FF2F6C]/30 hover:scale-110 transition-all duration-200`}
 >
   <Icons.MessageCircle
     className={`w-5 h-5 ${themeClasses.textSecondary}`}
