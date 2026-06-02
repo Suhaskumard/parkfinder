@@ -6,6 +6,8 @@ const userSchema = new mongoose.Schema({
   email: { type: String, unique: true },
   password: String,
   role: { type: String, default: "user" },
+  resetToken: String,
+  resetTokenExpiry: Date,
 });
 
 // Password hashing
