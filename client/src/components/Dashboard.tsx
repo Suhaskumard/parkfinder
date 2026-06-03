@@ -77,6 +77,7 @@ const DashboardPage: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [timeframe, setTimeframe] = useState<"week" | "month" | "year">(
     "month",
   );
@@ -88,8 +89,15 @@ const DashboardPage: React.FC = () => {
   const { theme } = useTheme();
 
   useEffect(() => {
+    if (!token) {
+      setIsAuthenticated(false);
+      setLoading(false);
+      return;
+    }
+
+    setIsAuthenticated(true);
     fetchDashboardData();
-  }, [timeframe]);
+  }, [timeframe, token]);
 
   const fetchDashboardData = async () => {
     try {
@@ -108,7 +116,14 @@ const DashboardPage: React.FC = () => {
       if (data.success) {
         setStats(data.data);
       } else {
-        setError(data.message);
+        if (
+          data.message?.toLowerCase().includes("token") ||
+          data.message?.toLowerCase().includes("unauthorized")
+        ) {
+          setError("Your session has expired. Please sign in again.");
+        } else {
+          setError(data.message);
+        }
       }
     } catch (err) {
       setError(
@@ -282,6 +297,49 @@ const DashboardPage: React.FC = () => {
             Loading your dashboard...
           </p>
           <p className={themeClasses.textSecondary}>Analyzing your parking data</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!loading && !isAuthenticated) {
+    return (
+      <div
+        className={`min-h-screen ${themeClasses.bg} flex items-center justify-center p-4 transition-colors duration-300`}
+      >
+        <div
+          className={`backdrop-blur-xl ${themeClasses.cardBgSecondary}
+          border ${themeClasses.border}
+          rounded-3xl p-8 max-w-md w-full shadow-2xl text-center`}
+        >
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#1B42CB]/20 to-[#FF2F6C]/20 flex items-center justify-center">
+            <Icons.Lock className="w-8 h-8 text-[#1B42CB]" />
+          </div>
+
+          <h2 className={`text-2xl font-bold ${themeClasses.text} mb-3`}>
+            Authentication Required
+          </h2>
+
+          <p className={`${themeClasses.textSecondary} mb-8`}>
+            You are not signed in. Please sign in or create an account to access the dashboard.
+          </p>
+
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={() => window.location.href = "/login"}
+              className="px-6 py-3 bg-gradient-to-r from-[#1B42CB] to-[#1B42CB]/80 text-white rounded-xl font-semibold hover:opacity-90 transition-all"
+            >
+              Sign In
+            </button>
+
+            <button
+              onClick={() => window.location.href = "/signup"}
+              className={`px-6 py-3 border ${themeClasses.border}
+              rounded-xl font-semibold ${themeClasses.text}`}
+            >
+              Sign Up
+            </button>
+          </div>
         </div>
       </div>
     );
