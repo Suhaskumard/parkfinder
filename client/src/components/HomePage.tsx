@@ -169,15 +169,14 @@ const [favoriteMessage, setFavoriteMessage] = useState("");
       </div>
 
       {/* Navigation Dots */}
-      <div className="fixed right-6 top-1/2 transform -translate-y-1/2 z-40 hidden lg:flex flex-col gap-3">
-        {[0, 1, 2].map((index) => (
+<div className="fixed right-[2px] sm:right-3 lg:right-6 top-1/2 transform -translate-y-1/2 z-40 flex flex-col gap-1.5 sm:gap-2">         {[0, 1, 2].map((index) => (
           <button
             key={index}
             onClick={() => scrollToSection(index)}
-            className={`w-3 h-3 rounded-full transition-all duration-300 ${
+            className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
               activeSection === index
                 ? `bg-linear-to-r ${themeClasses.linear.accent} scale-125`
-                : "bg-gray-400/30 hover:bg-gray-400/50"
+                : 'bg-gray-400/40 hover:bg-gray-400/60'
             }`}
             aria-label={`Go to section ${index + 1}`}
           />
