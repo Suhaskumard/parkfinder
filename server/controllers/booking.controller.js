@@ -3,7 +3,7 @@ import Parking from "../models/Parking.js";
 
 // Get current user's bookings
 
-export const getMyBookings =  async (req, res) => {
+export const getMyBookings = async (req, res) => {
   try {
     const userId = req.user._id;
 
@@ -13,16 +13,16 @@ export const getMyBookings =  async (req, res) => {
 
     res.json({
       success: true,
-      data: bookings
+      data: bookings,
     });
   } catch (err) {
     console.error("Error fetching user bookings:", err);
     res.status(500).json({
       success: false,
-      message: err.message
+      message: err.message,
     });
   }
-}
+};
 // Create new booking
 export const createBooking = async (req, res) => {
   try {
@@ -31,62 +31,70 @@ export const createBooking = async (req, res) => {
 
     console.log("📌 Booking request:", { parkingId, duration, userId });
 
-    // Check if parking slot exists
-    const parking = await Parking.findById(parkingId);
-    if (!parking) {
+    // Verify parking exists first (for 404 error)
+    const parkingExists = await Parking.findById(parkingId);
+    if (!parkingExists) {
       return res.status(404).json({
         success: false,
-        message: "Parking slot not found"
-      });
-    }
-
-    // Check availability
-    if (parking.availableSlots <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: "No available slots in this parking"
+        message: "Parking slot not found",
       });
     }
 
     // Calculate total price
-    const totalPrice = parking.pricePerHour * (duration || 1);
+    const totalPrice = parkingExists.pricePerHour * (duration || 1);
 
-    // Create booking
+    // Create booking document
     const booking = new Booking({
       userId,
       parkingId,
       duration: duration || 1,
       totalPrice,
       bookingDate: new Date(),
-      bookingStatus: "active"
+      bookingStatus: "active",
     });
 
-    // Save booking
+    // Save booking first
     await booking.save();
 
-    // Update parking slot availability
-    parking.availableSlots -= 1;
-    await parking.save();
+    // Atomically decrement parking slots - ensures no race condition
+    // Query condition: availableSlots > 0 (only update if slots available)
+    // If the parking has no slots, this returns null
+    const updatedParking = await Parking.findOneAndUpdate(
+      { _id: parkingId, availableSlots: { $gt: 0 } },
+      { $inc: { availableSlots: -1 } },
+      { new: true },
+    );
+
+    // If update failed (no slots available), delete the booking and return error
+    if (!updatedParking) {
+      await booking.deleteOne();
+      console.log("⚠️ Booking rejected - no available slots");
+      return res.status(409).json({
+        success: false,
+        message: "No available slots in this parking",
+      });
+    }
 
     // Populate and return booking
-    const populatedBooking = await Booking.findById(booking._id)
-      .populate("parkingId");
+    const populatedBooking = await Booking.findById(booking._id).populate(
+      "parkingId",
+    );
 
     console.log("✅ Booking created successfully:", booking._id);
 
     res.status(201).json({
       success: true,
       message: "Booking created successfully",
-      data: populatedBooking
+      data: populatedBooking,
     });
   } catch (err) {
     console.error("❌ Booking creation error:", err);
     res.status(500).json({
       success: false,
-      message: err.message
+      message: err.message,
     });
   }
-}
+};
 
 // Cancel booking
 export const cancelBooking = async (req, res) => {
@@ -100,7 +108,7 @@ export const cancelBooking = async (req, res) => {
     if (!booking) {
       return res.status(404).json({
         success: false,
-        message: "Booking not found"
+        message: "Booking not found",
       });
     }
 
@@ -108,18 +116,27 @@ export const cancelBooking = async (req, res) => {
     if (booking.userId.toString() !== userId.toString()) {
       return res.status(403).json({
         success: false,
-        message: "Not authorized to cancel this booking"
+        message: "Not authorized to cancel this booking",
       });
     }
 
-    // Update parking slot availability only if booking is active
+    // Update booking status and restore parking slot atomically
     if (booking.bookingStatus === "active") {
-      const parking = await Parking.findById(booking.parkingId);
-      if (parking) {
-        parking.availableSlots += 1;
-        await parking.save();
-        console.log("✅ Parking slot restored:", parking._id);
+      // Atomically increment parking slots
+      const updatedParking = await Parking.findOneAndUpdate(
+        { _id: booking.parkingId },
+        { $inc: { availableSlots: 1 } },
+        { new: true },
+      );
+
+      if (!updatedParking) {
+        return res.status(404).json({
+          success: false,
+          message: "Parking slot not found",
+        });
       }
+
+      console.log("✅ Parking slot restored:", updatedParking._id);
     }
 
     // Update booking status
@@ -130,21 +147,21 @@ export const cancelBooking = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Booking cancelled successfully"
+      message: "Booking cancelled successfully",
     });
   } catch (err) {
     console.error("❌ Cancel booking error:", err);
     res.status(500).json({
       success: false,
-      message: err.message
+      message: err.message,
     });
   }
-}
+};
 
 // ================== ADMIN BOOKINGS ==================
 
 // Get all bookings
-export const getAllBookings =  async (req, res) => {
+export const getAllBookings = async (req, res) => {
   try {
     console.log("📌 Fetching all bookings for admin...");
 
@@ -153,7 +170,7 @@ export const getAllBookings =  async (req, res) => {
       console.log("❌ Non-admin user trying to access all bookings");
       return res.status(403).json({
         success: false,
-        message: "Access denied. Admin only."
+        message: "Access denied. Admin only.",
       });
     }
 
@@ -166,24 +183,24 @@ export const getAllBookings =  async (req, res) => {
 
     res.json({
       success: true,
-      data: bookings
+      data: bookings,
     });
   } catch (err) {
     console.error("❌ Error fetching all bookings:", err);
     res.status(500).json({
       success: false,
-      message: err.message
+      message: err.message,
     });
   }
-}
+};
 
 // Update booking status
-export const updateBookingStatus =  async (req, res) => {
+export const updateBookingStatus = async (req, res) => {
   try {
     if (req.user.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: "Access denied. Admin only."
+        message: "Access denied. Admin only.",
       });
     }
 
@@ -193,16 +210,23 @@ export const updateBookingStatus =  async (req, res) => {
     if (!booking) {
       return res.status(404).json({
         success: false,
-        message: "Booking not found"
+        message: "Booking not found",
       });
     }
 
-    // If changing from active to cancelled, restore parking slot
+    // If changing from active to cancelled, atomically restore parking slot
     if (booking.bookingStatus === "active" && status === "cancelled") {
-      const parking = await Parking.findById(booking.parkingId);
-      if (parking) {
-        parking.availableSlots += 1;
-        await parking.save();
+      const updatedParking = await Parking.findOneAndUpdate(
+        { _id: booking.parkingId },
+        { $inc: { availableSlots: 1 } },
+        { new: true },
+      );
+
+      if (!updatedParking) {
+        return res.status(404).json({
+          success: false,
+          message: "Parking slot not found",
+        });
       }
     }
 
@@ -211,16 +235,16 @@ export const updateBookingStatus =  async (req, res) => {
 
     res.json({
       success: true,
-      message: "Booking status updated"
+      message: "Booking status updated",
     });
   } catch (err) {
     console.error("Error updating booking status:", err);
     res.status(500).json({
       success: false,
-      message: err.message
+      message: err.message,
     });
   }
-}
+};
 
 // Delete booking
 export const deleteBooking = async (req, res) => {
@@ -228,7 +252,7 @@ export const deleteBooking = async (req, res) => {
     if (req.user.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: "Access denied. Admin only."
+        message: "Access denied. Admin only.",
       });
     }
 
@@ -237,16 +261,23 @@ export const deleteBooking = async (req, res) => {
     if (!booking) {
       return res.status(404).json({
         success: false,
-        message: "Booking not found"
+        message: "Booking not found",
       });
     }
 
-    // Restore parking slot if booking was active
+    // Restore parking slot atomically if booking was active
     if (booking.bookingStatus === "active") {
-      const parking = await Parking.findById(booking.parkingId);
-      if (parking) {
-        parking.availableSlots += 1;
-        await parking.save();
+      const updatedParking = await Parking.findOneAndUpdate(
+        { _id: booking.parkingId },
+        { $inc: { availableSlots: 1 } },
+        { new: true },
+      );
+
+      if (!updatedParking) {
+        return res.status(404).json({
+          success: false,
+          message: "Parking slot not found",
+        });
       }
     }
 
@@ -254,13 +285,13 @@ export const deleteBooking = async (req, res) => {
 
     res.json({
       success: true,
-      message: "Booking deleted successfully"
+      message: "Booking deleted successfully",
     });
   } catch (err) {
     console.error("Error deleting booking:", err);
     res.status(500).json({
       success: false,
-      message: err.message
+      message: err.message,
     });
   }
-}
+};
