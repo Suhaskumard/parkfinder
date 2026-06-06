@@ -8,6 +8,7 @@ import adminSlotsRouter from "./routes/slotManage.js";
 import userManage from "./routes/userManage.js";
 import parkingLogRoute from "./routes/parkingLogRoute.js";
 import dashboardRoute from "./routes/dashboardRoute.js";
+import favoritesRoute from "./routes/favoritesRoute.js";
 import cors from "cors";
 import dotenv from "dotenv";
 
@@ -15,13 +16,11 @@ dotenv.config({ path: ".env" });
 
 // Validate critical environment variables at startup
 const requiredEnvVars = ["JWT_SECRET", "ADMIN_SECRET"];
-const missingEnvVars = requiredEnvVars.filter(
-  (envVar) => !process.env[envVar]
-);
+const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
 
 if (missingEnvVars.length > 0) {
   console.error(
-    `❌ FATAL ERROR: Missing required environment variables: ${missingEnvVars.join(", ")}`
+    `❌ FATAL ERROR: Missing required environment variables: ${missingEnvVars.join(", ")}`,
   );
   console.error("   Please set these in your .env file or system environment.");
   process.exit(1);
@@ -58,6 +57,8 @@ app.use("/api/admin/slots", adminSlotsRouter);
 app.use("/api/admin/users", userManage);
 // use parkingLog --- entry exit of vehicle
 app.use("/api", parkingLogRoute);
+// use favorites route
+app.use("/api/favorites", favoritesRoute);
 
 // use dashboard.js
 app.use("/api/dashboard", dashboardRoute);
