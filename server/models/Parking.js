@@ -13,6 +13,11 @@ const parkingSchema = new mongoose.Schema({
   rating: Number,
   openingTime: String,
   closingTime: String,
+  emergencyContact: {
+    phone: String,
+    supportEmail: String,
+    managerName: String,
+  },
 });
 
 export default mongoose.model("Parking", parkingSchema);
