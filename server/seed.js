@@ -3,7 +3,6 @@ import Parking from "./models/Parking.js";
 import dotenv from "dotenv";
 dotenv.config();
 
-
 const rawData = [
   {
     name: "City Center Parking",
@@ -18,6 +17,11 @@ const rawData = [
     rating: 4.5,
     openingTime: "08:00 AM",
     closingTime: "11:00 PM",
+    images: [
+      "https://images.unsplash.com/photo-1590674899484-d5640e854abe?w=800",
+      "https://images.unsplash.com/photo-1573348722427-f1d6819fdf98?w=800",
+      "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=800"
+    ],
   },
   {
     name: "Metro Parking Space",
@@ -32,6 +36,10 @@ const rawData = [
     rating: 4.0,
     openingTime: "06:00 AM",
     closingTime: "10:00 PM",
+    images: [
+      "https://images.unsplash.com/photo-1611288875785-5c4fe859e1a3?w=800",
+      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800"
+    ],
   },
   {
     name: "Mall Basement Parking",
@@ -46,6 +54,11 @@ const rawData = [
     rating: 4.8,
     openingTime: "24 Hours",
     closingTime: "24 Hours",
+    images: [
+      "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800",
+      "https://images.unsplash.com/photo-1590674899484-d5640e854abe?w=800",
+      "https://images.unsplash.com/photo-1573348722427-f1d6819fdf98?w=800"
+    ],
   },
   {
     name: "Central Park Parking",
@@ -60,6 +73,9 @@ const rawData = [
     rating: 3.9,
     openingTime: "07:00 AM",
     closingTime: "09:00 PM",
+    images: [
+      "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=800"
+    ],
   },
   {
     name: "Airport Multi-Level Parking",
@@ -74,6 +90,11 @@ const rawData = [
     rating: 4.7,
     openingTime: "24 Hours",
     closingTime: "24 Hours",
+    images: [
+      "https://images.unsplash.com/photo-1559329255-4b5b3e5f1e63?w=800",
+      "https://images.unsplash.com/photo-1611288875785-5c4fe859e1a3?w=800",
+      "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800"
+    ],
   },
   {
     name: "Tech Park Parking",
@@ -88,6 +109,10 @@ const rawData = [
     rating: 4.2,
     openingTime: "09:00 AM",
     closingTime: "08:00 PM",
+    images: [
+      "https://images.unsplash.com/photo-1573348722427-f1d6819fdf98?w=800",
+      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800"
+    ],
   },
   {
     name: "Railway Station Parking",
@@ -102,6 +127,10 @@ const rawData = [
     rating: 4.1,
     openingTime: "24 Hours",
     closingTime: "24 Hours",
+    images: [
+      "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=800",
+      "https://images.unsplash.com/photo-1590674899484-d5640e854abe?w=800"
+    ],
   },
   {
     name: "IT Hub Parking Lot",
@@ -116,6 +145,11 @@ const rawData = [
     rating: 4.4,
     openingTime: "06:00 AM",
     closingTime: "12:00 AM",
+    images: [
+      "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800",
+      "https://images.unsplash.com/photo-1559329255-4b5b3e5f1e63?w=800",
+      "https://images.unsplash.com/photo-1573348722427-f1d6819fdf98?w=800"
+    ],
   },
   {
     name: "Community Center Parking",
@@ -130,6 +164,9 @@ const rawData = [
     rating: 3.5,
     openingTime: "08:00 AM",
     closingTime: "09:00 PM",
+    images: [
+      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800"
+    ],
   },
   {
     name: "Techno Mall Parking",
@@ -144,6 +181,10 @@ const rawData = [
     rating: 4.3,
     openingTime: "10:00 AM",
     closingTime: "11:00 PM",
+    images: [
+      "https://images.unsplash.com/photo-1590674899484-d5640e854abe?w=800",
+      "https://images.unsplash.com/photo-1611288875785-5c4fe859e1a3?w=800"
+    ],
   },
   {
     name: "Harbour View Parking",
@@ -158,6 +199,10 @@ const rawData = [
     rating: 4.6,
     openingTime: "07:00 AM",
     closingTime: "10:00 PM",
+    images: [
+      "https://images.unsplash.com/photo-1559329255-4b5b3e5f1e63?w=800",
+      "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800"
+    ],
   },
   {
     name: "Stadium Parking Zone",
@@ -172,6 +217,11 @@ const rawData = [
     rating: 4.5,
     openingTime: "06:00 AM",
     closingTime: "11:00 PM",
+    images: [
+      "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=800",
+      "https://images.unsplash.com/photo-1573348722427-f1d6819fdf98?w=800",
+      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800"
+    ],
   },
   {
     name: "City Mall Roof Parking",
@@ -186,6 +236,10 @@ const rawData = [
     rating: 4.0,
     openingTime: "09:00 AM",
     closingTime: "11:00 PM",
+    images: [
+      "https://images.unsplash.com/photo-1590674899484-d5640e854abe?w=800",
+      "https://images.unsplash.com/photo-1559329255-4b5b3e5f1e63?w=800"
+    ],
   },
   {
     name: "Business Tower Parking",
@@ -200,6 +254,11 @@ const rawData = [
     rating: 4.7,
     openingTime: "08:00 AM",
     closingTime: "10:00 PM",
+    images: [
+      "https://images.unsplash.com/photo-1611288875785-5c4fe859e1a3?w=800",
+      "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800",
+      "https://images.unsplash.com/photo-1573348722427-f1d6819fdf98?w=800"
+    ],
   },
   {
     name: "Local Market Parking",
@@ -214,26 +273,25 @@ const rawData = [
     rating: 3.8,
     openingTime: "09:00 AM",
     closingTime: "09:00 PM",
+    images: [
+      "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=800",
+      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800"
+    ],
   },
 ];
 
-// Mongo URI
 const MONGO_URI = process.env.MONGO_URI;
 const parkingData = rawData.map((slot) => ({
   ...slot,
   _id: new mongoose.Types.ObjectId(),
 }));
+
 async function seedDB() {
   try {
     await mongoose.connect(MONGO_URI);
     console.log("MongoDB Connected");
-
-    // Clear existing data (optional)
     await Parking.deleteMany();
-
-    // Insert new data
     await Parking.insertMany(parkingData);
-
     console.log("Parking data inserted successfully!");
     process.exit();
   } catch (err) {

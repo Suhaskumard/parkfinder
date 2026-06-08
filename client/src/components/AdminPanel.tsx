@@ -34,6 +34,7 @@ interface ParkingSlot {
   availableSlots: number;
   distance?: string;
   rating?: number;
+  images?: string[];
 }
 
 interface User {
@@ -1437,6 +1438,26 @@ export default function AdminPanel() {
                 </div>
               </div>
 
+              {/* Image URLs */}
+              <div className="mb-6">
+                <label className={`block text-sm font-medium ${currentTheme.text} mb-2`}>
+                  Photo URLs (one per line)
+                </label>
+                <textarea
+                  rows={3}
+                  value={(slotForm.images ?? []).join("\n")}
+                  onChange={(e) =>
+                    setSlotForm({
+                      ...slotForm,
+                      images: e.target.value.split("\n").map((u) => u.trim()).filter(Boolean),
+                    })
+                  }
+                  className={`w-full px-4 py-3 ${currentTheme.inputBg} border ${currentTheme.inputBorder} rounded-xl ${currentTheme.text} focus:outline-none focus:border-[#FF2F6C] focus:ring-2 focus:ring-[#FF2F6C]/20 transition-all duration-300 resize-none`}
+                  placeholder={"https://example.com/photo1.jpg\nhttps://example.com/photo2.jpg"}
+                />
+                <p className={`text-xs ${currentTheme.textMuted} mt-1`}>Paste one image URL per line. Supports any public image link.</p>
+              </div>
+
               <div className="flex justify-end gap-3">
                 <button
                   type="button"
@@ -1574,3 +1595,4 @@ export default function AdminPanel() {
     </div>
   );
 }
+
