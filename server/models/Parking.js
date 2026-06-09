@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-
 const parkingSchema = new mongoose.Schema({
   name: String,
   location: String,
@@ -13,11 +12,11 @@ const parkingSchema = new mongoose.Schema({
   rating: Number,
   openingTime: String,
   closingTime: String,
+  images: { type: [String], default: [] },
   emergencyContact: {
     phone: String,
     supportEmail: String,
     managerName: String,
   },
 });
-
 export default mongoose.model("Parking", parkingSchema);

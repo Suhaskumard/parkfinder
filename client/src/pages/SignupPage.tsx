@@ -244,23 +244,20 @@ export default function SignupPage() {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/auth/signup`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            name: form.name.trim(),
-            email: form.email.trim(),
-            password: form.password,
-            role: form.role,
-            adminSecret: form.role === "admin" ? form.adminSecret : undefined,
-          }),
+      const res = await fetch(`/api/auth/signup`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-      );
+        body: JSON.stringify({
+          name: form.name.trim(),
+          email: form.email.trim(),
+          password: form.password,
+          role: form.role,
+          adminSecret: form.role === "admin" ? form.adminSecret : undefined,
+        }),
+      });
 
       const data = await res.json();
 

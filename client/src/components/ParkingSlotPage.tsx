@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import * as Icons from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import PredictionPanel from "./PredictionPanel";
 
 interface ParkingSlot {
   _id: string;
@@ -23,6 +24,7 @@ interface ParkingSlot {
     supportEmail?: string;
     managerName?: string;
   };
+  images?: string[];
 }
 
 interface ApiResponse {
@@ -40,6 +42,88 @@ const mockCoordinates = [
   { lat: 28.4089, lng: 77.3178 }, // Faridabad
   { lat: 28.6692, lng: 77.4535 }, // Ghaziabad
 ];
+
+// Image Carousel Component
+const ImageCarousel: React.FC<{ images: string[]; name: string }> = ({ images, name }) => {
+  const [current, setCurrent] = React.useState(0);
+  const [loaded, setLoaded] = React.useState(false);
+
+  if (!images || images.length === 0) {
+    return (
+      <div className="w-full h-48 bg-gradient-to-br from-[#1B42CB]/20 to-[#FF2F6C]/20 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-2">
+            <Icons.Image className="w-6 h-6 text-white/40" />
+          </div>
+          <span className="text-white/40 text-sm">No photos available</span>
+        </div>
+      </div>
+    );
+  }
+
+  const prev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLoaded(false);
+    setCurrent((c) => (c - 1 + images.length) % images.length);
+  };
+  const next = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLoaded(false);
+    setCurrent((c) => (c + 1) % images.length);
+  };
+
+  return (
+    <div className="relative w-full h-48 overflow-hidden bg-[#111] group">
+      {!loaded && (
+        <div className="absolute inset-0 flex items-center justify-center bg-[#111]">
+          <div className="w-8 h-8 rounded-full border-2 border-[#1B42CB] border-t-transparent animate-spin" />
+        </div>
+      )}
+      <img
+        src={images[current]}
+        alt={`${name} photo ${current + 1}`}
+        loading="lazy"
+        onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
+        className={`w-full h-full object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
+      />
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+      {/* Navigation arrows � only show if more than 1 image */}
+      {images.length > 1 && (
+        <>
+          <button
+            onClick={prev}
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+          >
+            <Icons.ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            onClick={next}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+          >
+            <Icons.ChevronRight className="w-4 h-4" />
+          </button>
+          {/* Dot indicators */}
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+            {images.map((_, i) => (
+              <button
+                key={i}
+                onClick={(e) => { e.stopPropagation(); setLoaded(false); setCurrent(i); }}
+                className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${i === current ? "bg-white w-3" : "bg-white/50"}`}
+              />
+            ))}
+          </div>
+        </>
+      )}
+      {/* Photo count badge */}
+      <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-black/50 text-white text-xs flex items-center gap-1">
+        <Icons.Camera className="w-3 h-3" />
+        {current + 1}/{images.length}
+      </div>
+    </div>
+  );
+};
 
 const ParkingSlotPage: React.FC = () => {
   const navigate = useNavigate();
@@ -66,7 +150,9 @@ const ParkingSlotPage: React.FC = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
 
   const { token, user } = useAuth();
-  const API = import.meta.env.VITE_API_URL;
+
+  // Prediction panel state
+  const [predictionSlot, setPredictionSlot] = useState<ParkingSlot | null>(null);
 
   // Detect system theme
   const { theme } = useTheme();
@@ -128,7 +214,7 @@ const ParkingSlotPage: React.FC = () => {
   // Function to fetch parking slots
   const fetchParkingSlots = async () => {
     try {
-      const response = await fetch(`${API}/api/parking`);
+      const response = await fetch(`/api/parking`);
       const result: ApiResponse = await response.json();
       if (result.success) {
         const slotsWithCoordinates = result.data.map((slot, index) => ({
@@ -156,7 +242,7 @@ const ParkingSlotPage: React.FC = () => {
   const fetchFavorites = async () => {
     if (!token) return;
     try {
-      const res = await fetch(`${API}/api/favorites`, {
+      const res = await fetch(`/api/favorites`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -220,7 +306,7 @@ const ParkingSlotPage: React.FC = () => {
           : [...prev, locationId],
       );
 
-      const res = await fetch(`${API}/api/favorites/${locationId}`, {
+      const res = await fetch(`/api/favorites/${locationId}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -289,7 +375,7 @@ const ParkingSlotPage: React.FC = () => {
     try {
       const totalPrice = selectedSlot.pricePerHour * duration;
 
-      const res = await fetch(`${API}/api/bookings/book`, {
+      const res = await fetch(`/api/bookings/book`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -655,7 +741,9 @@ const ParkingSlotPage: React.FC = () => {
               <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
                 <div className="flex items-center gap-2 mb-3">
                   <Icons.AlertTriangle className="w-5 h-5 text-red-500" />
-                  <span className={`font-semibold ${themeClasses.text}`}>Emergency Assistance</span>
+                  <span className={`font-semibold ${themeClasses.text}`}>
+                    Emergency Assistance
+                  </span>
                 </div>
                 <div className="flex gap-3">
                   <a
@@ -689,6 +777,13 @@ const ParkingSlotPage: React.FC = () => {
                 <Icons.Navigation className="w-4 h-4" />
                 Get Directions
               </a>
+              <button
+                onClick={() => setPredictionSlot(selectedMapSlot)}
+                className={`px-4 py-3 ${themeClasses.cardBgSecondary} border ${themeClasses.border} ${themeClasses.textSecondary} font-semibold rounded-xl ${themeClasses.hover} transition-all duration-300 flex items-center justify-center gap-2`}
+              >
+                <Icons.TrendingUp className="w-4 h-4" />
+                Forecast
+              </button>
               <button
                 onClick={() => handleBookNow(selectedMapSlot)}
                 disabled={
@@ -745,6 +840,7 @@ const ParkingSlotPage: React.FC = () => {
                 </div>
               </div>
 
+              <ImageCarousel images={slot.images ?? []} name={slot.name} />
               <div className="p-6">
                 {/* Header */}
                 <div className="flex justify-between items-start mb-6">
@@ -879,7 +975,11 @@ const ParkingSlotPage: React.FC = () => {
                   <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
                     <div className="flex items-center gap-2 mb-3">
                       <Icons.AlertTriangle className="w-4 h-4 text-red-500" />
-                      <span className={`text-sm font-semibold ${themeClasses.text}`}>Emergency Assistance</span>
+                      <span
+                        className={`text-sm font-semibold ${themeClasses.text}`}
+                      >
+                        Emergency Assistance
+                      </span>
                     </div>
                     <div className="flex gap-2">
                       <a
@@ -905,6 +1005,15 @@ const ParkingSlotPage: React.FC = () => {
 
                 {/* Action Buttons */}
                 <div className="flex gap-2">
+                  {/* Availability Forecast button */}
+                  <button
+                    onClick={() => setPredictionSlot(slot)}
+                    title="View availability forecast"
+                    className={`px-3 py-3 rounded-lg border ${themeClasses.cardBgSecondary} ${themeClasses.border} ${themeClasses.textSecondary} ${themeClasses.hover} transition-colors flex items-center justify-center gap-1.5 text-sm`}
+                  >
+                    <Icons.TrendingUp className="w-4 h-4" />
+                    Forecast
+                  </button>
                   <a
                     href={getDirectionsUrl(slot)}
                     target="_blank"
@@ -1278,9 +1387,17 @@ const ParkingSlotPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Prediction Panel Modal */}
+      {predictionSlot && (
+        <PredictionPanel
+          parkingId={predictionSlot._id}
+          parkingName={predictionSlot.name}
+          onClose={() => setPredictionSlot(null)}
+        />
+      )}
+
       {/* Booking Modal */}
-      <div
-        id="booking-modal"
+      <div        id="booking-modal"
         className="hidden fixed inset-0 bg-black/80 backdrop-blur-sm items-center justify-center z-50 p-4"
       >
         <div
@@ -1483,3 +1600,6 @@ const ParkingSlotPage: React.FC = () => {
 };
 
 export default ParkingSlotPage; 
+
+
+
