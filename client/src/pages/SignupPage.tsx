@@ -1,5 +1,6 @@
-import { useState} from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import {
   Eye,
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 
 export default function SignupPage() {
+  const { login } = useAuth();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -43,9 +45,7 @@ export default function SignupPage() {
   const navigate = useNavigate();
 
   // Detect system theme
-   const { theme } = useTheme();
- 
- 
+  const { theme } = useTheme();
 
   // Theme-based classes
   const getThemeClasses = () => {
@@ -265,10 +265,13 @@ export default function SignupPage() {
       const data = await res.json();
 
       if (data.success) {
-        setMsg("Account created successfully! Redirecting to login...");
+        login(data.user, data.token);
+
+        setMsg("Account created successfully! Welcome!");
+
         setTimeout(() => {
-          navigate("/login");
-        }, 2000);
+          navigate("/");
+        }, 1000);
       } else {
         setMsg(data.message || "Signup failed. Please try again.");
       }

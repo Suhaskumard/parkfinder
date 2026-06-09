@@ -2,7 +2,7 @@ import User from "../models/User.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
-export const signup =  async (req, res) => {
+export const signup = async (req, res) => {
   try {
     const { name, email, password, role, adminSecret } = req.body;
 
@@ -29,14 +29,27 @@ export const signup =  async (req, res) => {
 
     await user.save();
 
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" },
+    );
+
     res.json({
       success: true,
-      message: `${role} signup successful`,
+      message: "Account created successfully! Welcome!",
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
-}
+};
 
 export const login = async (req, res) => {
   try {
@@ -49,9 +62,13 @@ export const login = async (req, res) => {
     if (!isMatch)
       return res.json({ success: false, message: "Incorrect password" });
 
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
-      expiresIn: "7d",
-    });
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "7d",
+      },
+    );
 
     res.json({
       success: true,
@@ -66,11 +83,11 @@ export const login = async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
-}
+};
 
 export const verify = async (req, res) => {
   res.json({
     success: true,
     user: req.user,
   });
-}
+};
