@@ -1,5 +1,6 @@
 import ParkingLog from "../models/ParkingLog.js";
 import Booking from "../models/Booking.js";
+import Parking from "../models/Parking.js";
 
 export const enterVehicle =  async (req, res) => {
   const { bookingId } = req.params;
@@ -18,21 +19,57 @@ export const enterVehicle =  async (req, res) => {
 }
 
 export const exitVehicle = async (req, res) => {
-  const { bookingId } = req.params;
+  try {
+    const { bookingId } = req.params;
 
-  const log = await ParkingLog.findOne({ bookingId, status: "active" });
-  if (!log) return res.status(400).json({ success: false, message: "No active entry found" });
+    // 1. Find the active parking log
+    const log = await ParkingLog.findOne({ bookingId, status: "active" });
+    if (!log) {
+      return res.status(400).json({ success: false, message: "No active entry found" });
+    }
 
-  log.exitTime = new Date();
-  log.status = "completed";
-  await log.save();
+    // 2. Find the associated booking
+    const booking = await Booking.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({ success: false, message: "Booking not found" });
+    }
 
-  // Update booking status
-  const booking = await Booking.findById(bookingId);
-  booking.bookingStatus = "completed";
-  await booking.save();
+    // 3. Update the parking log
+    log.exitTime = new Date();
+    log.status = "completed";
+    await log.save();
 
-  const duration = (log.exitTime - log.entryTime) / 1000 / 60; // duration in minutes
+    // 4. Update booking status to completed
+    booking.bookingStatus = "completed";
+    await booking.save();
 
-  res.json({ success: true, message: "Vehicle exited", log, duration });
+    // 5. Increment available slots in the Parking collection
+    const updatedParking = await Parking.findOneAndUpdate(
+      { _id: booking.parkingId },
+      { $inc: { availableSlots: 1 } },
+      { new: true }
+    );
+
+    if (!updatedParking) {
+      console.error(`⚠️ Failed to increment slots for parkingId: ${booking.parkingId}`);
+    } else {
+      console.log(`✅ Parking slot restored for ${updatedParking.name}. Available: ${updatedParking.availableSlots}`);
+    }
+
+    const duration = (log.exitTime - log.entryTime) / 1000 / 60; // duration in minutes
+
+    res.json({ 
+      success: true, 
+      message: "Vehicle exited and slot recovered successfully", 
+      log, 
+      duration,
+      availableSlots: updatedParking ? updatedParking.availableSlots : null
+    });
+  } catch (err) {
+    console.error("❌ Exit vehicle error:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
 }
