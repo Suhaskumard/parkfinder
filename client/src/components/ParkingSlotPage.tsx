@@ -4,7 +4,14 @@ import * as Icons from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import PredictionPanel from "./PredictionPanel";
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  Polyline,
+  useMap,
+} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useRouteNavigation } from "../hooks/useRouteNavigation";
@@ -216,14 +223,27 @@ const ParkingSlotPage: React.FC = () => {
   const [duration, setDuration] = useState(1);
 
   // State for tracking favorited location IDs
-  // const [favorites, setFavorites] = useState<string[]>([]);
+  const [favorites, setFavorites] = useState<string[]>([]);
+
+  const [vehicleFilter, setVehicleFilter] = useState<string>("All");
+  const vehicleTypes = ["All", "Car", "Bike", "SUV", "EV"];
 
   // Navigation & routing hook usage
-  const { routeCoords, loading: routingLoading, error: routingError, calculateRoute, clearRoute } = useRouteNavigation();
+  const {
+    routeCoords,
+    loading: routingLoading,
+    error: routingError,
+    calculateRoute,
+    clearRoute,
+  } = useRouteNavigation();
   const [geoError, setGeoError] = useState<string | null>(null);
 
   const handleNavigate = (slot: ParkingSlot) => {
-    if (!slot.coordinates || typeof slot.coordinates.lat !== "number" || typeof slot.coordinates.lng !== "number") {
+    if (
+      !slot.coordinates ||
+      typeof slot.coordinates.lat !== "number" ||
+      typeof slot.coordinates.lng !== "number"
+    ) {
       alert("Error: Parking slot coordinates are missing or invalid.");
       return;
     }
@@ -355,22 +375,22 @@ const ParkingSlotPage: React.FC = () => {
   };
 
   // Fetch user's favorite locations
-  // const fetchFavorites = async () => {
-  //   if (!token) return;
-  //   try {
-  //     const res = await fetch(`/api/favorites`, {
-  //       headers: { Authorization: `Bearer ${token}` },
-  //     });
-  //     const data = await res.json();
-  //     if (data.success) {
-  //       // Extract just the IDs so it's easy to check `favorites.includes(id)`
-  //       const favoriteIds = data.data.map((fav: any) => fav._id);
-  //       setFavorites(favoriteIds);
-  //     }
-  //   } catch (err) {
-  //     console.error("Failed to fetch favorites:", err);
-  //   }
-  // };
+  const fetchFavorites = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`/api/favorites`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Extract just the IDs so it's easy to check `favorites.includes(id)`
+        const favoriteIds = data.data.map((fav: any) => fav._id);
+        setFavorites(favoriteIds);
+      }
+    } catch (err) {
+      console.error("Failed to fetch favorites:", err);
+    }
+  };
 
   useEffect(() => {
     // Get user location
@@ -379,7 +399,10 @@ const ParkingSlotPage: React.FC = () => {
         setUserLocation(loc);
       })
       .catch((error) => {
-        console.warn("Initial user location fetch failed, using fallback Delhi coordinates:", error);
+        console.warn(
+          "Initial user location fetch failed, using fallback Delhi coordinates:",
+          error,
+        );
         setUserLocation({ lat: 28.6139, lng: 77.209 });
       });
 
@@ -392,52 +415,52 @@ const ParkingSlotPage: React.FC = () => {
   }, [evFilter]);
 
   // Fetch favorites separately to ensure it runs when token is available
-  // useEffect(() => {
-  //   if (token) {
-  //     fetchFavorites();
-  //   }
-  // }, [token]);
+  useEffect(() => {
+    if (token) {
+      fetchFavorites();
+    }
+  }, [token]);
 
   // Handle Toggle Favorite Button Click
-  // const handleToggleFavorite = async (
-  //   e: React.MouseEvent,
-  //   locationId: string,
-  // ) => {
-  //   e.stopPropagation(); // Prevents map markers from triggering if nested
-  // 
-  //   if (!token || !user) {
-  //     alert("Please login to save favorite locations");
-  //     navigate("/login");
-  //     return;
-  //   }
-  // 
-  //   try {
-  //     // Optimistically update UI
-  //     setFavorites((prev) =>
-  //       prev.includes(locationId)
-  //         ? prev.filter((id) => id !== locationId)
-  //         : [...prev, locationId],
-  //     );
-  // 
-  //     const res = await fetch(`/api/favorites/${locationId}`, {
-  //       method: "POST",
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //         "Content-Type": "application/json",
-  //       },
-  //     });
-  // 
-  //     const data = await res.json();
-  //     if (!data.success) {
-  //       // Revert on failure
-  //       fetchFavorites();
-  //       console.error("Failed to toggle favorite:", data.message);
-  //     }
-  //   } catch (err) {
-  //     console.error("Error toggling favorite:", err);
-  //     fetchFavorites(); // Revert on failure
-  //   }
-  // };
+  const handleToggleFavorite = async (
+    e: React.MouseEvent,
+    locationId: string,
+  ) => {
+    e.stopPropagation(); // Prevents map markers from triggering if nested
+
+    if (!token || !user) {
+      alert("Please login to save favorite locations");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      // Optimistically update UI
+      setFavorites((prev) =>
+        prev.includes(locationId)
+          ? prev.filter((id) => id !== locationId)
+          : [...prev, locationId],
+      );
+
+      const res = await fetch(`/api/favorites/${locationId}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await res.json();
+      if (!data.success) {
+        // Revert on failure
+        fetchFavorites();
+        console.error("Failed to toggle favorite:", data.message);
+      }
+    } catch (err) {
+      console.error("Error toggling favorite:", err);
+      fetchFavorites(); // Revert on failure
+    }
+  };
 
   // Calculate distance between two coordinates
   const calculateDistance = (
@@ -601,6 +624,15 @@ const ParkingSlotPage: React.FC = () => {
       );
     }
 
+    if (vehicleFilter && vehicleFilter !== "All") {
+      filtered = filtered.filter((slot) => {
+        if (!slot.supportedVehicles || slot.supportedVehicles.length === 0) {
+          return vehicleFilter !== "EV";
+        }
+        return slot.supportedVehicles.includes(vehicleFilter);
+      });
+    }
+
     // Client-side guard: if evFilter is on but server somehow returned non-EV slots,
     // ensure we only show EV slots in the list
     if (evFilter) {
@@ -635,7 +667,15 @@ const ParkingSlotPage: React.FC = () => {
     }
 
     return filtered;
-  }, [parkingSlots, searchTerm, statusFilter, sortBy, userLocation, evFilter]);
+  }, [
+    parkingSlots,
+    searchTerm,
+    statusFilter,
+    sortBy,
+    userLocation,
+    evFilter,
+    vehicleFilter,
+  ]);
 
   // Render Map View
   const renderMapView = () => {
@@ -676,8 +716,13 @@ const ParkingSlotPage: React.FC = () => {
 
             {(geoError || routingError) && (
               <div className="absolute inset-x-0 top-0 bg-red-600/90 text-white px-3 py-2 text-xs font-semibold z-[1000] flex justify-between items-center">
-                <span className="truncate pr-2">Error: {geoError || routingError}</span>
-                <button onClick={handleClearRoute} className="hover:opacity-80 shrink-0">
+                <span className="truncate pr-2">
+                  Error: {geoError || routingError}
+                </span>
+                <button
+                  onClick={handleClearRoute}
+                  className="hover:opacity-80 shrink-0"
+                >
                   <Icons.X className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -694,7 +739,11 @@ const ParkingSlotPage: React.FC = () => {
             )}
 
             <MapContainer
-              center={userLocation ? [userLocation.lat, userLocation.lng] : [28.6139, 77.209]}
+              center={
+                userLocation
+                  ? [userLocation.lat, userLocation.lng]
+                  : [28.6139, 77.209]
+              }
               zoom={13}
               style={{ height: "100%", width: "100%" }}
               scrollWheelZoom={true}
@@ -707,9 +756,14 @@ const ParkingSlotPage: React.FC = () => {
 
               {/* User location marker */}
               {userLocation && (
-                <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
+                <Marker
+                  position={[userLocation.lat, userLocation.lng]}
+                  icon={userIcon}
+                >
                   <Popup>
-                    <div className="font-semibold text-gray-800">Your Location</div>
+                    <div className="font-semibold text-gray-800">
+                      Your Location
+                    </div>
                   </Popup>
                 </Marker>
               )}
@@ -732,8 +786,12 @@ const ParkingSlotPage: React.FC = () => {
                   >
                     <Popup>
                       <div className="p-2 min-w-[200px] text-gray-800">
-                        <h3 className="font-bold text-base text-gray-900 mb-1">{slot.name}</h3>
-                        <p className="text-xs text-gray-600 mb-2">{slot.location}</p>
+                        <h3 className="font-bold text-base text-gray-900 mb-1">
+                          {slot.name}
+                        </h3>
+                        <p className="text-xs text-gray-600 mb-2">
+                          {slot.location}
+                        </p>
                         <div className="flex justify-between items-center text-xs font-semibold mb-2">
                           <span>₹{slot.pricePerHour}/hr</span>
                           <span
@@ -822,12 +880,36 @@ const ParkingSlotPage: React.FC = () => {
                   {selectedMapSlot.location}
                 </p>
               </div>
-              <button
-                onClick={() => setSelectedMapSlot(null)}
-                className={`w-8 h-8 rounded-lg ${themeClasses.cardBgSecondary} border ${themeClasses.border} flex items-center justify-center ${themeClasses.text} ${themeClasses.hover} transition-colors`}
-              >
-                <Icons.X className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={(e) => handleToggleFavorite(e, selectedMapSlot._id)}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                    favorites.includes(selectedMapSlot._id)
+                      ? "text-[#FF2F6C]"
+                      : `${themeClasses.textMuted} hover:text-[#FF2F6C]`
+                  }`}
+                  title={
+                    favorites.includes(selectedMapSlot._id)
+                      ? "Remove from favorites"
+                      : "Save to favorites"
+                  }
+                >
+                  <Icons.Heart
+                    className="w-5 h-5"
+                    fill={
+                      favorites.includes(selectedMapSlot._id)
+                        ? "currentColor"
+                        : "none"
+                    }
+                  />
+                </button>
+                <button
+                  onClick={() => setSelectedMapSlot(null)}
+                  className={`w-8 h-8 rounded-lg ${themeClasses.cardBgSecondary} border ${themeClasses.border} flex items-center justify-center ${themeClasses.text} ${themeClasses.hover} transition-colors`}
+                >
+                  <Icons.X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -1016,7 +1098,27 @@ const ParkingSlotPage: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="flex flex-col items-end gap-2">
+                    <button
+                      onClick={(e) => handleToggleFavorite(e, slot._id)}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                        favorites.includes(slot._id)
+                          ? "text-[#FF2F6C]"
+                          : `${themeClasses.textMuted} hover:text-[#FF2F6C]`
+                      }`}
+                      title={
+                        favorites.includes(slot._id)
+                          ? "Remove from favorites"
+                          : "Save to favorites"
+                      }
+                    >
+                      <Icons.Heart
+                        className="w-5 h-5"
+                        fill={
+                          favorites.includes(slot._id) ? "currentColor" : "none"
+                        }
+                      />
+                    </button>
                     <div
                       className={`text-2xl font-bold bg-gradient-to-r ${themeClasses.gradient.accent} bg-clip-text text-transparent`}
                     >
@@ -1127,8 +1229,13 @@ const ParkingSlotPage: React.FC = () => {
                         EV Charging Available
                       </div>
                       {slot.chargerType && slot.chargerType !== "None" && (
-                        <div className={`text-xs ${themeClasses.textSecondary} mt-0.5`}>
-                          Charger type: <span className="font-semibold text-emerald-300">{slot.chargerType}</span>
+                        <div
+                          className={`text-xs ${themeClasses.textSecondary} mt-0.5`}
+                        >
+                          Charger type:{" "}
+                          <span className="font-semibold text-emerald-300">
+                            {slot.chargerType}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -1444,7 +1551,11 @@ const ParkingSlotPage: React.FC = () => {
                   role="switch"
                   aria-checked={evFilter}
                   onClick={() => setEvFilter((prev) => !prev)}
-                  title={evFilter ? "Showing EV-only slots" : "Show EV charging slots only"}
+                  title={
+                    evFilter
+                      ? "Showing EV-only slots"
+                      : "Show EV charging slots only"
+                  }
                   className={`relative inline-flex items-center gap-2.5 px-4 py-3 rounded-xl border font-semibold text-sm transition-all duration-300 select-none ${
                     evFilter
                       ? "bg-emerald-500/20 border-emerald-500/60 text-emerald-300 shadow-lg shadow-emerald-500/20"
@@ -1525,7 +1636,9 @@ const ParkingSlotPage: React.FC = () => {
             {/* Active filter pill summary */}
             {evFilter && (
               <div className="mt-4 flex items-center gap-2">
-                <span className={`text-xs ${themeClasses.textSecondary}`}>Active filters:</span>
+                <span className={`text-xs ${themeClasses.textSecondary}`}>
+                  Active filters:
+                </span>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/40">
                   <Icons.Zap className="w-3 h-3 fill-current" />
                   EV Charging Only
@@ -1548,12 +1661,16 @@ const ParkingSlotPage: React.FC = () => {
               <div
                 className={`w-24 h-24 bg-gradient-to-br ${themeClasses.gradient.accent}/20 rounded-full flex items-center justify-center mx-auto mb-6 border ${themeClasses.border}`}
               >
-                {evFilter
-                  ? <Icons.Zap className="w-8 h-8 text-emerald-400" />
-                  : <Icons.Car className="w-8 h-8 text-[#1B42CB]" />}
+                {evFilter ? (
+                  <Icons.Zap className="w-8 h-8 text-emerald-400" />
+                ) : (
+                  <Icons.Car className="w-8 h-8 text-[#1B42CB]" />
+                )}
               </div>
               <h3 className={`text-2xl font-bold ${themeClasses.text} mb-3`}>
-                {evFilter ? "No EV Charging Slots Found" : "No Parking Slots Found"}
+                {evFilter
+                  ? "No EV Charging Slots Found"
+                  : "No Parking Slots Found"}
               </h3>
               <p className={`${themeClasses.textSecondary} mb-6`}>
                 {searchTerm || statusFilter || evFilter
