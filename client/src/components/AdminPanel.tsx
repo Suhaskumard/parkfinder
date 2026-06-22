@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import AnalyticsPanel from "./AnalyticsPanel";
+import AdminSecurityTab from "./AdminSecurityTab";
 import {
   Search,
   Edit,
@@ -67,7 +68,7 @@ interface Booking {
   bookingStatus: "active" | "cancelled" | "completed";
 }
 
-type TabType = "parking" | "users" | "bookings" | "analytics";
+type TabType = "parking" | "users" | "bookings" | "analytics" | "security";
 
 export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState<TabType>("parking");
@@ -714,6 +715,22 @@ export default function AdminPanel() {
                 className={`w-5 h-5 relative z-10 ${activeTab === "analytics" ? "animate-pulse" : ""}`}
               />
               <span className="relative z-10">Analytics</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("security")}
+              className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 relative overflow-hidden group ${
+                activeTab === "security"
+                  ? "text-white"
+                  : `${currentTheme.textSecondary} hover:${currentTheme.text}`
+              }`}
+            >
+              {activeTab === "security" && (
+                <div className="absolute inset-0 bg-gradient-to-r from-[#1B42CB] to-[#FF2F6C] animate-gradient"></div>
+              )}
+              <Shield
+                className={`w-5 h-5 relative z-10 ${activeTab === "security" ? "animate-pulse" : ""}`}
+              />
+              <span className="relative z-10">Security</span>
             </button>
           </div>
         </div>
@@ -1571,6 +1588,9 @@ export default function AdminPanel() {
           </div>
         </div>
       )}
+
+      {/* Security Tab */}
+      {activeTab === "security" && <AdminSecurityTab />}
 
       {/* Custom Animations */}
       <style>{`

@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { authMiddleware } from "../middleware/auth.js";
 import { sendPasswordResetEmail } from "../utils/email.js";
-import { signup,login,verify } from "../controllers/auth.controller.js";
+import { signup, login, verify, verify2FALogin } from "../controllers/auth.controller.js";
 import { authLimiter, resetLimiter } from "../middleware/rateLimiter.js";
 
 
@@ -16,6 +16,9 @@ router.post("/signup", authLimiter, signup);
 
 // Login (User)
 router.post("/login",authLimiter , login);
+
+// Login (Verify 2FA)
+router.post("/login/verify-2fa", authLimiter, verify2FALogin);
 
 // Forgot password
 router.post("/forgot-password", resetLimiter, async (req, res) => {
