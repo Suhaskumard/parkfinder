@@ -2,6 +2,8 @@ import express from "express";
 
 import { authMiddleware } from "../middleware/auth.js";
 import { cancelBooking, createBooking, deleteBooking, getAllBookings, getMyBookings, updateBookingStatus } from "../controllers/booking.controller.js";
+import { validateRequest } from "../middleware/validate.js";
+import { createBookingSchema, updateBookingStatusSchema, cancelBookingSchema } from "../validators/booking.validator.js";
 
 const router = express.Router();
 
@@ -20,49 +22,11 @@ const router = express.Router();
  */
 router.get("/my-bookings", authMiddleware, getMyBookings);
 
-/**
- * @swagger
- * /api/bookings/book:
- *   post:
- *     summary: Create a new booking
- *     tags: [Bookings]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               parkingId: { type: string }
- *               startTime: { type: string, format: date-time }
- *               endTime: { type: string, format: date-time }
- *     responses:
- *       201:
- *         description: Booking created successfully
- */
-router.post("/book", authMiddleware,createBooking);
+// Create new booking (user)
+router.post("/book", authMiddleware, validateRequest(createBookingSchema), createBooking);
 
-/**
- * @swagger
- * /api/bookings/cancel/{id}:
- *   delete:
- *     summary: Cancel a booking (user)
- *     tags: [Bookings]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Booking cancelled successfully
- */
-router.delete("/cancel/:id", authMiddleware,cancelBooking);
+// Cancel booking (user)
+router.delete("/cancel/:id", authMiddleware, validateRequest(cancelBookingSchema), cancelBooking);
 
 // ================== ADMIN BOOKINGS ==================
 /**
@@ -79,52 +43,10 @@ router.delete("/cancel/:id", authMiddleware,cancelBooking);
  */
 router.get("/all", authMiddleware,getAllBookings);
 
-/**
- * @swagger
- * /api/bookings/{id}/status:
- *   put:
- *     summary: Update booking status (admin only)
- *     tags: [Bookings]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               status: { type: string }
- *     responses:
- *       200:
- *         description: Booking status updated
- */
-router.put("/:id/status", authMiddleware,updateBookingStatus);
+// Update booking status (admin only)
+router.put("/:id/status", authMiddleware, validateRequest(updateBookingStatusSchema), updateBookingStatus);
 
-/**
- * @swagger
- * /api/bookings/admin-delete/{id}:
- *   delete:
- *     summary: Delete a booking completely (admin only)
- *     tags: [Bookings]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Booking deleted successfully
- */
-router.delete("/admin-delete/:id", authMiddleware, deleteBooking);
+// Delete booking (admin only)
+router.delete("/admin-delete/:id", authMiddleware, validateRequest(cancelBookingSchema), deleteBooking);
 
 export default router;

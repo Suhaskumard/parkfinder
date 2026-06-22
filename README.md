@@ -380,6 +380,61 @@ To add caching to a new read-heavy endpoint:
 
 ---
 
+## 🛡️ Zod Schema Validation Architecture
+
+To ensure data integrity and prevent malformed payloads from reaching the controllers, Parkfinder utilizes a centralized request validation layer powered by **Zod**.
+
+### 1. Framework Architecture
+- **Middleware:** A generic validation middleware (`server/middleware/validate.js`) intercepts requests before they hit the controller.
+- **Strict Verification:** The middleware parses the incoming `req.body`, `req.query`, and `req.params` against the provided Zod schema. If validation passes, the request is allowed through and properties are sanitized. If it fails, a structured HTTP 400 response is generated.
+- **Separation of Concerns:** Controllers are kept clean and focused strictly on business logic rather than checking for missing parameters or malformed data types.
+
+### 2. Schema Organization Strategy
+All validation schemas are modularly organized within the `server/validators/` directory based on the specific feature:
+- `auth.validator.js`: Schemas for user registration, login, and password resets.
+- `booking.validator.js`: Schemas for creating, updating, and cancelling reservations.
+- `slot.validator.js`: Schemas for admin slot modifications and creation.
+
+### 3. Error Response Format
+When validation fails, the API standardizes the response to an HTTP 400 Bad Request, structured as follows:
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": [
+    {
+      "field": "body.email",
+      "message": "Invalid email address"
+    },
+    {
+      "field": "body.password",
+      "message": "Password must be at least 6 characters"
+    }
+  ]
+}
+```
+
+### 4. Creating & Extending Validation on Future Endpoints
+To apply validation to a new route, follow these guidelines:
+1. **Define a Schema:** Create a new schema in the appropriate `server/validators/*.js` file.
+   ```javascript
+   export const updateProfileSchema = z.object({
+     body: z.object({
+       name: z.string().min(2, 'Name is required').optional(),
+     }),
+   });
+   ```
+2. **Apply the Middleware:** Import `validateRequest` and your schema in the route definition.
+   ```javascript
+   import { validateRequest } from '../middleware/validate.js';
+   import { updateProfileSchema } from '../validators/user.validator.js';
+
+   router.put('/profile', authMiddleware, validateRequest(updateProfileSchema), updateProfile);
+   ```
+3. **Use Passthrough For Agnostic Payloads:** When a schema should accept unpredictable additional properties, utilize `.passthrough()` on your Zod object.
+
+---
+
 Here's an overview of how the repository is structured:
 
 ```text
