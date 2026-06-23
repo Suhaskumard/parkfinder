@@ -48,3 +48,26 @@ export const sendPasswordResetEmail = async ({ to, resetToken }) => {
 
   return resetLink;
 };
+
+export const sendContactSupportEmail = async ({ name, email, subject, message }) => {
+  const transporter = getTransporter();
+  
+  await transporter.verify();
+  
+  const supportEmail = process.env.SUPPORT_EMAIL || process.env.SMTP_USER || process.env.EMAIL_USER;
+  
+  await transporter.sendMail({
+    from: process.env.EMAIL_FROM || process.env.SMTP_USER || process.env.EMAIL_USER,
+    to: supportEmail,
+    replyTo: email,
+    subject: `Support Request: ${subject}`,
+    html: `
+      <h2>New Support Request from ${name}</h2>
+      <p><strong>Email:</strong> ${email}</p>
+      <p><strong>Subject:</strong> ${subject}</p>
+      <hr />
+      <h3>Message:</h3>
+      <p>${message.replace(/\n/g, '<br>')}</p>
+    `,
+  });
+};
