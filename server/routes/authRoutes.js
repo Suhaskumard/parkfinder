@@ -6,10 +6,10 @@ import jwt from "jsonwebtoken";
 import { authMiddleware } from "../middleware/auth.js";
 import { sendPasswordResetEmail } from "../utils/email.js";
 import { signup, login, verify, forgotPassword, resetPassword } from "../controllers/auth.controller.js";
-import { authLimiter, resetLimiter } from "../middleware/rateLimiter.js";
 import { validateRequest } from "../middleware/validate.js";
 import { signupSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from "../validators/auth.validator.js";
 import { authLimiter, resetLimiter } from "../middleware/rateLimiter.js";
+import { verify2FALogin } from "../controllers/auth.controller.js";
 
 
 const router = express.Router();
