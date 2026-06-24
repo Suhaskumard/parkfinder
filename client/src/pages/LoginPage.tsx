@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
-import { Eye, EyeOff, Mail, Lock, Car, AlertCircle, LogIn } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Car, AlertCircle, LogIn, ShieldCheck } from "lucide-react";
+import { v4 as uuidv4 } from "uuid";
 
 const THEME_CLASSES = {
   light: {
@@ -58,8 +59,19 @@ export default function LoginPage() {
   
   // 2FA states
   const [requires2FA, setRequires2FA] = useState(false);
+  const [requiresEmail2FA, setRequiresEmail2FA] = useState(false);
   const [tempToken, setTempToken] = useState("");
   const [twoFactorToken, setTwoFactorToken] = useState("");
+  const [deviceId, setDeviceId] = useState("");
+
+  useEffect(() => {
+    let storedDeviceId = localStorage.getItem("deviceId");
+    if (!storedDeviceId) {
+      storedDeviceId = uuidv4();
+      localStorage.setItem("deviceId", storedDeviceId);
+    }
+    setDeviceId(storedDeviceId);
+  }, []);
   
   // const [theme, setTheme] = useState<"light" | "dark">("dark");
   const { login } = useAuth();
@@ -108,18 +120,22 @@ export default function LoginPage() {
     setMsg("");
 
     try {
+      const payload = { ...form, deviceId };
       const res = await fetch(`/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
 
       if (data.success) {
-        if (data.requires2FA) {
+        if (data.requiresEmail2FA) {
+          setRequiresEmail2FA(true);
+          setTempToken(data.tempToken);
+        } else if (data.requires2FA) {
           setRequires2FA(true);
           setTempToken(data.tempToken);
         } else {
@@ -145,21 +161,35 @@ export default function LoginPage() {
     setMsg("");
 
     try {
-      const res = await fetch(`/api/auth/login/verify-2fa`, {
+      // Determine endpoint based on which 2FA is active
+      const endpoint = requiresEmail2FA ? `/api/auth/login/verify-email-2fa` : `/api/auth/login/verify-2fa`;
+      const payload = requiresEmail2FA 
+        ? { tempToken, otp: twoFactorToken, deviceId } 
+        : { tempToken, token: twoFactorToken };
+
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ tempToken, token: twoFactorToken }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
 
       if (data.success) {
-        login(data.user, data.token);
-        navigate("/");
+        if (data.requires2FA && requiresEmail2FA) {
+          // If we just passed email 2FA but still need app 2FA
+          setRequiresEmail2FA(false);
+          setRequires2FA(true);
+          setTempToken(data.tempToken);
+          setTwoFactorToken("");
+        } else {
+          login(data.user, data.token);
+          navigate("/");
+        }
       } else {
-        setMsg(data.message || "Invalid 2FA token.");
+        setMsg(data.message || "Invalid verification code.");
       }
     } catch (err) {
       setMsg("Network error. Please try again.");
@@ -227,7 +257,7 @@ export default function LoginPage() {
           )}
 
           {/* Form */}
-          {!requires2FA ? (
+          {!requires2FA && !requiresEmail2FA ? (
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field */}
             <div>
@@ -376,9 +406,17 @@ export default function LoginPage() {
           </form>
           ) : (
           <form onSubmit={handle2FASubmit} className="space-y-6">
+            <div className="text-center mb-6">
+              <ShieldCheck className={`w-12 h-12 mx-auto mb-2 ${themeClasses.iconColor}`} />
+              <p className={`text-sm ${themeClasses.textSecondary}`}>
+                {requiresEmail2FA 
+                  ? "We've sent a 6-digit verification code to your email." 
+                  : "Enter the code from your authenticator app."}
+              </p>
+            </div>
             <div>
               <label className={`block text-sm font-medium ${themeClasses.text} mb-2`}>
-                Authenticator Code
+                {requiresEmail2FA ? "Email Verification Code" : "Authenticator Code"}
               </label>
               <div className="relative">
                 <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
@@ -406,7 +444,7 @@ export default function LoginPage() {
             </button>
             <button
               type="button"
-              onClick={() => { setRequires2FA(false); setTempToken(""); setTwoFactorToken(""); setMsg(""); }}
+              onClick={() => { setRequires2FA(false); setRequiresEmail2FA(false); setTempToken(""); setTwoFactorToken(""); setMsg(""); }}
               className={`w-full py-3 text-center block text-sm ${themeClasses.textMuted} hover:${themeClasses.text} transition-colors`}
             >
               Back to Login

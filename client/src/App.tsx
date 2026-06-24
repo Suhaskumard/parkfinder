@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import ParkingSlotPage from "./components/ParkingSlotPage";
 import BookedSlotsPage from "./components/BookedSlotsPage";
 import "./App.css";
+import { OnboardingProvider } from "./context/OnboardingContext";
+import OnboardingCarousel from "./components/OnboardingCarousel";
 import Navbar from "./components/Navbar";
 import HomePage from "./components/HomePage";
 import SignupPage from "./pages/SignupPage";
