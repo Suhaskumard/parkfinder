@@ -8,9 +8,10 @@ export const expireBookingsTask = async () => {
     console.log("⏰ Running cron job: Check for expired bookings...");
     
     // Find active bookings whose expiry time has passed
+    const now = new Date();
     const expiredBookings = await Booking.find({
       bookingStatus: "active",
-      expiresAt: { $lt: new Date() }
+      expiresAt: { $lt: now }
     });
     
     if (expiredBookings.length === 0) {
