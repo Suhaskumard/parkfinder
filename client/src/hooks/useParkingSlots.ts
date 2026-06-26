@@ -18,6 +18,7 @@ export interface ParkingSlot {
   capacity: number;
   distance: string;
   rating: number;
+  description?: string;
   coordinates?: {
     lat: number;
     lng: number;
