@@ -18,6 +18,7 @@ import BackToTop from "./components/BackToTop";
 import PrivacyPage from "./pages/PrivacyPage";
 import TermsPage from "./pages/TermsPage";
 import FavoritesPage from "./pages/FavoritesPage";
+import ContactPage from "./pages/ContactPage";
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
         {/* Naye added routes */}
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
+        <Route path="/contact" element={<ContactPage />} />
       </Routes>
     </Router>
   );

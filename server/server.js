@@ -12,7 +12,7 @@ import dashboardRoute from "./routes/dashboardRoute.js";
 import predictionRoute from "./routes/predictionRoute.js";
 import favoritesRoute from "./routes/favoritesRoute.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
-import peakHoursRoute from "./routes/peakHoursRoute.js";
+import contactRoute from "./routes/contactRoute.js";
 import cors from "cors";
 import dotenv from "dotenv";
 import floorVisualizationRoute from "./routes/floorVisualizationRoute.js";
@@ -42,6 +42,8 @@ if (missingEnvVars.length > 0) {
 }
 
 const app = express();
+app.set('trust proxy', 1); // Trust first proxy for express-rate-limit to work correctly behind reverse proxies
+
 const PORT = process.env.PORT || 5000;
 app.use(
   cors({
@@ -90,9 +92,11 @@ app.use("/api", parkingLogRoute);
 // use favorites route
 app.use("/api/favorites", favoritesRoute);
 
+// use contact route
+app.use("/api/contact", contactRoute);
+
 // use reviews route
 app.use("/api/reviews", reviewRoute);
-
 // use dashboard.js
 app.use("/api/dashboard", dashboardRoute);
 

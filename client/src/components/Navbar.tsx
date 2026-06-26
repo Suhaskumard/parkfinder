@@ -107,6 +107,11 @@ const Navbar: React.FC = () => {
       path: "/favorites",
       icon: Icons.Heart,
     },
+    {
+      name: "Contact",
+      path: "/contact",
+      icon: Icons.LifeBuoy,
+    },
 
     ...(user?.role === "admin"
       ? [
