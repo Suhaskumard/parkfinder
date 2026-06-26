@@ -12,6 +12,7 @@ import dashboardRoute from "./routes/dashboardRoute.js";
 import predictionRoute from "./routes/predictionRoute.js";
 import favoritesRoute from "./routes/favoritesRoute.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
+import contactRoute from "./routes/contactRoute.js";
 import cors from "cors";
 import dotenv from "dotenv";
 import floorVisualizationRoute from "./routes/floorVisualizationRoute.js";
@@ -39,6 +40,8 @@ if (missingEnvVars.length > 0) {
 }
 
 const app = express();
+app.set('trust proxy', 1); // Trust first proxy for express-rate-limit to work correctly behind reverse proxies
+
 const PORT = process.env.PORT || 5000;
 app.use(
   cors({
@@ -62,10 +65,18 @@ app.use("/api/auth", authRoutes);
 app.use("/api/auth/2fa", auth2faRoutes);
 // get/Use Booking APi data
 app.use("/api", getbookingdata);
-// get/Use Parking API routes
+
+// Nested parking sub-routes — these MUST be registered BEFORE the general
+// "/api/parking" mount below. Express matches mounted routers by path prefix
+// in registration order, so if the broader "/api/parking" router is mounted
+// first, it intercepts requests like "/api/parking/:id/floors" before they
+// ever reach floorVisualizationRoute or peakHoursRoute.
+app.use("/api/parking/:parkingId/floors", floorVisualizationRoute);
+app.use("/api/parking/:parkingId/peak-hours", peakHoursRoute);
+
+// get/Use Parking API routes (general — must come AFTER the nested routes above)
 app.use("/api/parking", parkingApi);
 
-app.use("/api/parking/:parkingId/floors", floorVisualizationRoute);
 // Use Booking Routes
 app.use("/api/bookings", bookingRouter);
 // Use slot management route.
@@ -79,9 +90,10 @@ app.use("/api", parkingLogRoute);
 // use favorites route
 app.use("/api/favorites", favoritesRoute);
 
+// use contact route
+app.use("/api/contact", contactRoute);
 // use reviews route
 app.use("/api/reviews", reviewRoute);
-
 // use dashboard.js
 app.use("/api/dashboard", dashboardRoute);
 

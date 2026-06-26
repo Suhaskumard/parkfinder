@@ -10,6 +10,7 @@ declare const process: {
 export interface ParkingSlot {
   _id: string;
   name: string;
+  description?: string;
   location: string;
   pricePerHour: number;
   status: string;
@@ -17,6 +18,7 @@ export interface ParkingSlot {
   capacity: number;
   distance: string;
   rating: number;
+  description?: string;
   coordinates?: {
     lat: number;
     lng: number;
