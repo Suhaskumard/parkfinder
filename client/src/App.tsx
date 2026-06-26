@@ -19,10 +19,12 @@ import PrivacyPage from "./pages/PrivacyPage";
 import TermsPage from "./pages/TermsPage";
 import FavoritesPage from "./pages/FavoritesPage";
 import ContactPage from "./pages/ContactPage";
+import SessionTimeout from "./components/SessionTimeout";
 
 function App() {
   return (
     <Router>
+      <SessionTimeout />
       <Navbar />
       <BackToTop />
       <Routes>

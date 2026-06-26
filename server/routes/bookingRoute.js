@@ -34,6 +34,9 @@ router.patch("/:id/extend", authMiddleware, extendBooking);
 // Download PDF receipt (user/admin)
 router.get("/:id/receipt", authMiddleware, downloadReceipt);
 
+// Download PDF receipt (user/admin)
+router.get("/:id/receipt", authMiddleware, downloadReceipt);
+
 // ================== ADMIN BOOKINGS ==================
 /**
  * @swagger
