@@ -26,7 +26,10 @@ router.get("/my-bookings", authMiddleware, getMyBookings);
 router.post("/book", authMiddleware, validateRequest(createBookingSchema), createBooking);
 
 // Cancel booking (user)
-router.delete("/cancel/:id", authMiddleware, validateRequest(cancelBookingSchema), cancelBooking);
+router.delete("/cancel/:id", authMiddleware, validateRequest(cancelBookingSchema),  cancelBooking);
+
+// Extend booking duration (user)
+router.patch("/:id/extend", authMiddleware, extendBooking);
 
 // Download PDF receipt (user/admin)
 router.get("/:id/receipt", authMiddleware, downloadReceipt);

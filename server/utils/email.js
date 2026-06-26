@@ -77,8 +77,7 @@ export const send2FAEmail = async ({ to, otp }) => {
 
   await transporter.verify();
   await transporter.sendMail({
-    from:
-      process.env.EMAIL_FROM || process.env.SMTP_USER || process.env.EMAIL_USER,
+    from: process.env.EMAIL_FROM || process.env.SMTP_USER || process.env.EMAIL_USER,
     to,
     subject: "Your SmartPark Login Verification Code",
     html: `
@@ -92,6 +91,9 @@ export const send2FAEmail = async ({ to, otp }) => {
         <p>This code will expire in <strong>10 minutes</strong>.</p>
         <p style="color: #6b7280; font-size: 14px;">If you did not attempt to log in, please secure your account by changing your password immediately.</p>
       </div>
+    `
+  });
+};
     `,
   });
 };
