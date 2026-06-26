@@ -19,6 +19,11 @@ import floorVisualizationRoute from "./routes/floorVisualizationRoute.js";
 import reviewRoute from "./routes/reviewRoute.js";
 import { connectRedis } from "./utils/cache.js";
 import "./jobs/bookingExpiry.js";
+import { setupLogger } from "./utils/logger.js";
+import { requestIdMiddleware } from "./middleware/requestId.js";
+
+// Initialize global logger override
+setupLogger();
 
 dotenv.config({ path: ".env" });
 
@@ -55,6 +60,9 @@ app.use(
 // Middleware to parse JSON body (if needed later)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Attach Request ID Tracking Context
+app.use(requestIdMiddleware);
 
 // Connect to Database
 if (process.env.NODE_ENV !== 'test') {
